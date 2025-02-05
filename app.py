@@ -71,14 +71,19 @@ class ChatBot:
     def chat(self, message, model_choice, history):
         if not message:
             return "", history
-            
+        
+        print(f"[DEBUG] User input: {message}")
+        print(f"[DEBUG] Selected model: {model_choice}")
+
         llm_engine = get_llm_engine(model_choice)
+        print("[DEBUG] LLM engine initialized")
         
         # Add user message to log
         self.message_log.append({"role": "user", "content": message})
         
         # Generate AI response
         ai_response = self.generate_ai_response(message, llm_engine)
+        print(f"[DEBUG] AI response: {ai_response}")
         
         # Add AI response to log
         self.message_log.append({"role": "ai", "content": ai_response})
