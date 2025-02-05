@@ -1,4 +1,4 @@
-# 🧠 DeepSeek Code Companion
+# 🧠 DeepSeek Code Companion Launching using Docker
 
 ![DeepSeek Code Companion Interface](interface.png)
 
