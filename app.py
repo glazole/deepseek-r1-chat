@@ -1,5 +1,23 @@
 import gradio as gr
 from langchain_ollama import ChatOllama
+import requests  # Добавил import
+
+# Тест Ollama перед запуском Gradio
+def test_ollama_connection():
+    url = "http://127.0.0.1:11434/api/chat"
+    payload = {
+        "model": "deepseek-r1:1.5b",
+        "messages": [{"role": "system", "content": "Ты AI-помощник"}, {"role": "user", "content": "Привет!"}]
+    }
+    try:
+        response = requests.post(url, json=payload)
+        print("Test response:", response.json())  # Выводит в лог ответ от модели
+    except Exception as e:
+        print("Error connecting to Ollama:", e)
+
+# Вызов тестовой функции
+test_ollama_connection()
+
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.prompts import (
     SystemMessagePromptTemplate,
@@ -21,7 +39,7 @@ def get_llm_engine(model_name):
 # System prompt configuration
 # SYSTEM_TEMPLATE = """You are an expert AI coding assistant. Provide concise, correct solutions 
 # with strategic print statements for debugging. Always respond in Russian."""
-SYSTEM_TEMPLATE = """Ты - эксперт в области разработки программного обеспечения для искусственного интеллекта. 
+SYSTEM_TEMPLATE = """Ты эксперт в области разработки программного обеспечения для искусственного интеллекта. 
 Предлагай краткие и правильные решения, сопровождая их подробными выводами для отладки. Всегда отвечай на русском языке."""
 
 chat_prompt = ChatPromptTemplate.from_messages([
