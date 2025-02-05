@@ -1,6 +1,6 @@
 services:
   deepseek-chat:
-    image: deepseek-chat-gpu:russian
+    image: deepseek-chat-gpu-russian
     # build: .
     restart: always
     ports:
