@@ -13,11 +13,11 @@ services:
               count: all
               capabilities: [gpu]
     environment:
-      - OLLAMA_HOST=0.0.0.0:11434
-      - OLLAMA_LLM_LIBRARY=cuda
+      # - OLLAMA_HOST=127.0.0.1:11434
+      # - OLLAMA_LLM_LIBRARY=cuda
       # - OLLAMA_CONTEXT_SIZE=2048
       # - OLLAMA_NUM_PARALLEL=8
-      - OLLAMA_NOHISTORY=false
+      # - OLLAMA_NOHISTORY=false
       - NVIDIA_VISIBLE_DEVICES=all
       - NVIDIA_DRIVER_CAPABILITIES=compute,utility
     command: ["/entrypoint.sh"]
