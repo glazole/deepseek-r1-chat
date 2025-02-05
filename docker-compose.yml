@@ -5,15 +5,7 @@ services:
     restart: always
     ports:
       - "7860:7860"
-    deploy:
-      resources:
-        reservations:
-          devices:
-            - driver: nvidia
-              count: all
-              capabilities: [gpu]
     environment:
       - OLLAMA_HOST=0.0.0.0:11434
-      - NVIDIA_VISIBLE_DEVICES=all
-      - NVIDIA_DRIVER_CAPABILITIES=compute,utility
+      - OLLAMA_LLM_LIBRARY=cpu
     command: ["/entrypoint.sh"]
