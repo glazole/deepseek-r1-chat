@@ -16,10 +16,6 @@ COPY . .
 # Устанавливаем зависимости
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Загружаем модель DeepSeek-r1
-RUN ollama pull deepseek-r1:1.5b
-RUN ollama pull deepseek-r1:3b
-
 # Открываем порт для Gradio
 EXPOSE 7860
 

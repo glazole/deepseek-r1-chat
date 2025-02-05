@@ -1,7 +1,8 @@
 services:
   deepseek-chat:
     image: deepseek-chat
-    build: .
+    # build: .
+    restart: always
     ports:
       - "7860:7860"
     deploy:
