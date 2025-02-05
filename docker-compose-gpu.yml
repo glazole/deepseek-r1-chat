@@ -1,7 +1,7 @@
 services:
   deepseek-chat:
     image: deepseek-chat-gpu
-    build: .
+    # build: .
     restart: always
     ports:
       - "7860:7860"
