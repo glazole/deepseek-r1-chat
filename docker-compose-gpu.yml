@@ -1,6 +1,6 @@
 services:
   deepseek-chat:
-    image: deepseek-chat-gpu-russian:t1
+    image: deepseek-chat-gpu:t1
     # build: .
     restart: always
     ports:
@@ -13,7 +13,7 @@ services:
               count: all
               capabilities: [gpu]
     environment:
-      - OLLAMA_HOST=0.0.0.0:11434
+      # - OLLAMA_HOST=0.0.0.0:11434
       # - OLLAMA_LLM_LIBRARY=cuda
       # - OLLAMA_CONTEXT_SIZE=2048
       # - OLLAMA_NUM_PARALLEL=8
