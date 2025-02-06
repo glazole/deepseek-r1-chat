@@ -32,7 +32,7 @@ from langchain_core.messages import HumanMessage, AIMessage, SystemMessage
 def get_llm_engine(model_name):
     return ChatOllama(
         model=model_name,
-        base_url="http://127.0.0.1:11434/api/chat",
+        base_url="http://127.0.0.1:11434",
         temperature=0.3
     )
 
