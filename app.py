@@ -32,15 +32,13 @@ from langchain_core.messages import HumanMessage, AIMessage, SystemMessage
 def get_llm_engine(model_name):
     return ChatOllama(
         model=model_name,
-        base_url="http://0.0.0.0:11434",
+        base_url="http://127.0.0.1:11434/api/chat",
         temperature=0.3
     )
 
 # System prompt configuration
 SYSTEM_TEMPLATE = """You are an expert AI coding assistant. Provide concise, correct solutions 
 with strategic print statements for debugging. Always respond in English."""
-# SYSTEM_TEMPLATE = """Ты эксперт в области разработки программного обеспечения для искусственного интеллекта. 
-# Предлагай краткие и правильные решения, сопровождая их подробными выводами для отладки. Всегда отвечай на русском языке."""
 
 chat_prompt = ChatPromptTemplate.from_messages([
     ("system", SYSTEM_TEMPLATE),
