@@ -13,7 +13,7 @@ services:
               count: all
               capabilities: [gpu]
     environment:
-      - OLLAMA_HOST=127.0.0.1:11434
+      - OLLAMA_HOST=0.0.0.0:11434
       # - OLLAMA_LLM_LIBRARY=cuda
       # - OLLAMA_CONTEXT_SIZE=2048
       # - OLLAMA_NUM_PARALLEL=8
