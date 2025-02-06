@@ -7,7 +7,7 @@ def test_ollama_connection():
     url = "http://127.0.0.1:11434/api/chat"
     payload = {
         "model": "deepseek-r1:1.5b",
-        "messages": [{"role": "system", "content": "Ты AI-помощник"}, {"role": "user", "content": "Привет!"}]
+        "messages": [{"role": "system", "content": "You are an expert Python and ML/AI coding assistant"}, {"role": "user", "content": "Hello!"}]
     }
     try:
         response = requests.post(url, json=payload)
