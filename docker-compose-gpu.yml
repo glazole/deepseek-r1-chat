@@ -3,8 +3,8 @@ services:
     image: deepseek-chat-gpu-russian:t1
     # build: .
     restart: always
-    # ports:
-    #   - "7860:7860"
+    ports:
+      - "7860:7860"
     deploy:
       resources:
         reservations:
