@@ -107,7 +107,6 @@ def create_demo():
                 chatbot_component = gr.Chatbot(
                     value=[(None, "Hi! I'm DeepSeek. How can I help you code today? 💻")],
                     height=500,
-                    type='messages'
                 )
                 msg = gr.Textbox(
                     placeholder="Type your coding question here...",
