@@ -5,9 +5,10 @@ FROM nvidia/cuda:12.4.0-base-ubuntu22.04
 RUN apt-get update && apt-get install -y \
     python3 \
     python3-pip \
+    curl \
+    wget \
     && rm -rf /var/lib/apt/lists/*
-
-RUN apt-get update && apt-get install -y curl wget
+    
 # Устанавливаем Ollama
 RUN curl -fsSL https://ollama.com/install.sh | sh
 
