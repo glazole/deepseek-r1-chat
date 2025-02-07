@@ -12,7 +12,7 @@ RUN apt-get update && apt-get install -y curl wget
 RUN curl -fsSL https://ollama.com/install.sh | sh
 
 # Установите PyTorch с поддержкой CUDA 12.4
-RUN pip3 install torch==2.4.1+cu124 torchvision==0.15.2+cu124 -f https://download.pytorch.org/whl/torch_stable.html
+RUN pip3 install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu124
 
 # Скопируйте текущую директорию в /app
 COPY . /app
