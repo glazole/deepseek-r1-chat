@@ -1,50 +1,49 @@
 import gradio as gr
 from langchain_ollama import ChatOllama
-import requests  # Добавил import
+import requests
 import torch
+import logging
+
+# Настройка логирования
+logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
+
+# Новый URL Ollama в Docker
+OLLAMA_API = "http://ollama:11434"  # Исправлено
 
 # Тест Ollama перед запуском Gradio
 def test_ollama_connection():
-    url = "http://127.0.0.1:11434/api/chat"
     payload = {
         "model": "deepseek-r1:1.5b",
-        "messages": [{"role": "system", "content": "You are an expert Python and ML/AI coding assistant"}, {"role": "user", "content": "Hello!"}]
+        "messages": [{"role": "system", "content": "You are an expert Python and ML/AI coding assistant"},
+                     {"role": "user", "content": "Hello!"}]
     }
     try:
-        response = requests.post(url, json=payload)
-        print("Test response:", response.json())  # Выводит в лог ответ от модели
+        response = requests.post(f"{OLLAMA_API}/api/chat", json=payload)  # Исправлено
+        logging.info(f"Test response: {response.json()}")
     except Exception as e:
-        print("Error connecting to Ollama:", e)
+        logging.error(f"Error connecting to Ollama: {e}")
 
 # Вызов тестовой функции
 test_ollama_connection()
 
 from langchain_core.output_parsers import StrOutputParser
-from langchain_core.prompts import (
-    SystemMessagePromptTemplate,
-    HumanMessagePromptTemplate,
-    AIMessagePromptTemplate,
-    ChatPromptTemplate,
-    MessagesPlaceholder
-)
-from langchain_core.messages import HumanMessage, AIMessage, SystemMessage
+from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
+from langchain_core.messages import HumanMessage, AIMessage
 
-# Initialize the chat engine
+# Инициализация LLM
 def get_llm_engine(model_name):
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    print(f"Using device: {device}")
+    device = "cuda" if torch.cuda.is_available() else "cpu"
+    logging.info(f"Using device: {device}")
 
-    # Предполагается, что ChatOllama поддерживает передачу устройства
     return ChatOllama(
         model=model_name,
-        base_url="http://127.0.0.1:11434",
-        temperature=0.3,
-        device=device  # Передача устройства, если поддерживается
+        base_url=OLLAMA_API,  # Исправлено
+        temperature=0.3
     )
 
-# System prompt configuration
+
 SYSTEM_TEMPLATE = """You are an expert AI coding assistant. Provide concise, correct solutions 
-with strategic print statements for debugging. Always respond in English."""
+with strategic logging.info statements for debugging. Always respond in English."""
 
 chat_prompt = ChatPromptTemplate.from_messages([
     ("system", SYSTEM_TEMPLATE),
@@ -68,30 +67,26 @@ class ChatBot:
             self.chat_history.append(AIMessage(content=response))
             return response
         except Exception as e:
-            print("Error generating AI response:", e)
+            logging.error(f"Error generating AI response: {e}")  # Исправлено
             return "Sorry, I encountered an error while generating the response."
 
     def chat(self, message, model_choice, history):
         if not message:
             return "", history
         
-        print(f"[DEBUG] User input: {message}")
-        print(f"[DEBUG] Selected model: {model_choice}")
+        logging.debug(f"[DEBUG] User input: {message}")
+        logging.debug(f"[DEBUG] Selected model: {model_choice}")
 
         llm_engine = get_llm_engine(model_choice)
-        print("[DEBUG] LLM engine initialized")
+        logging.debug("[DEBUG] LLM engine initialized")
         
-        # Add user message to log
         self.message_log.append({"role": "user", "content": message})
         
-        # Generate AI response
         ai_response = self.generate_ai_response(message, llm_engine)
-        print(f"[DEBUG] AI response: {ai_response}")
+        logging.debug(f"[DEBUG] AI response: {ai_response}")
         
-        # Add AI response to log
         self.message_log.append({"role": "ai", "content": ai_response})
         
-        # Update chat history
         history.append((message, ai_response))
         return "", history
 
@@ -127,14 +122,14 @@ def create_demo():
                 - 📝 Code Documentation
                 - 💡 Solution Design
                 """)
-                
+
                 gr.Markdown("Built with [Ollama](https://ollama.ai/) | [LangChain](https://python.langchain.com/)")
 
         msg.submit(
             fn=chatbot.chat,
             inputs=[msg, model_dropdown, chatbot_component],
-            outputs=[msg, chatbot_component]
-        )
+            outputs=[chatbot_component]
+        ).then(lambda: "", None, msg)  # Очищает поле после отправки
 
     return demo
 

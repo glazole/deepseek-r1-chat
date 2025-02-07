@@ -1,4 +1,6 @@
-gradio 
+gradio
 langchain
 langchain_ollama
 langchain_core
+requests
+torch

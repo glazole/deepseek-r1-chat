@@ -1,17 +1,32 @@
 services:
-  deepseek-chat:
-    image: deepseek-chat-gpu:t1
-    restart: always
-    ports:
-      - "7860:7860"
-    deploy:
-      resources:
-        reservations:
-          devices:
-            - driver: nvidia
-              count: all
-              capabilities: [gpu]
+  ollama:
+    image: nvidia/cuda:12.6.0-base-ubuntu24.04  # Обновил на 12.6.0
+    container_name: ollama
+    runtime: nvidia
     environment:
       - NVIDIA_VISIBLE_DEVICES=all
       - NVIDIA_DRIVER_CAPABILITIES=compute,utility
-    command: ["/entrypoint.sh"]
+    volumes:
+      - ./models:/root/.ollama/models
+    ports:
+      - "11434:11434"
+    command: >
+      /bin/sh -c "
+      curl -fsSL https://ollama.com/install.sh | sh &&
+      ollama list | grep -q 'deepseek-r1:1.5b' || ollama pull deepseek-r1:1.5b &&
+      ollama list | grep -q 'deepseek-r1:7b' || ollama pull deepseek-r1:7b &&
+      ollama serve
+      "
+
+  gradio:
+    build: .
+    container_name: gradio_app
+    depends_on:
+      - ollama
+    ports:
+      - "7860:7860"
+    environment:
+      - OLLAMA_API=http://ollama:11434
+    volumes:
+      - ./app:/app
+    restart: unless-stopped
