@@ -1,6 +1,6 @@
 services:
   ollama:
-    image: nvidia/cuda:12.6.0-base-ubuntu24.04  # Обновил на 12.6.0
+    image: nvidia/cuda:12.6.0-base-ubuntu24.04
     container_name: ollama
     runtime: nvidia
     environment:
@@ -28,5 +28,5 @@ services:
     environment:
       - OLLAMA_API=http://ollama:11434
     volumes:
-      - ./app:/app
+      - ./deepseek-r1-chat:/app
     restart: unless-stopped
