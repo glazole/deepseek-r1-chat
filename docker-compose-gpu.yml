@@ -7,7 +7,7 @@ services:
       - NVIDIA_VISIBLE_DEVICES=all
       - NVIDIA_DRIVER_CAPABILITIES=compute,utility
     volumes:
-      - ./models:/root/.ollama/models
+      - ./deepseek-r1-chat/models:/root/.ollama/models
     ports:
       - "11434:11434"
     command: >

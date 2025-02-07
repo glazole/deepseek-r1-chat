@@ -12,7 +12,7 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Копируем весь код
-COPY . .
+COPY . /app
 
 # Запускаем Gradio
 CMD ["python", "app.py"]
