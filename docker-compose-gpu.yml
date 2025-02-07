@@ -1,25 +1,28 @@
 services:
   ollama:
-    image: nvidia/cuda:12.6.0-base-ubuntu24.04
+    build:
+      context: .
+      dockerfile: Dockerfile.ollama
     container_name: ollama
     runtime: nvidia
     environment:
       - NVIDIA_VISIBLE_DEVICES=all
       - NVIDIA_DRIVER_CAPABILITIES=compute,utility
     volumes:
-      - ./deepseek-r1-chat/models:/root/.ollama/models
+      - ./models:/root/.ollama/models
     ports:
       - "11434:11434"
     command: >
       /bin/sh -c "
-      curl -fsSL https://ollama.com/install.sh | sh &&
       ollama list | grep -q 'deepseek-r1:1.5b' || ollama pull deepseek-r1:1.5b &&
       ollama list | grep -q 'deepseek-r1:7b' || ollama pull deepseek-r1:7b &&
       ollama serve
       "
 
   gradio:
-    build: .
+    build:
+      context: .
+      dockerfile: Dockerfile.gradio
     container_name: gradio_app
     depends_on:
       - ollama
@@ -28,5 +31,5 @@ services:
     environment:
       - OLLAMA_API=http://ollama:11434
     volumes:
-      - ./deepseek-r1-chat:/app
+      - ./app:/app
     restart: unless-stopped

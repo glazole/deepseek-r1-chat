@@ -1,0 +1,21 @@
+# Используем базовый образ CUDA 12.6 с Ubuntu 24.04
+FROM nvidia/cuda:12.6.0-base-ubuntu24.04
+
+# Устанавливаем curl и другие зависимости
+RUN apt-get update && apt-get install -y \
+    curl \
+    gnupg \
+    ca-certificates && \
+    rm -rf /var/lib/apt/lists/*
+
+# Устанавливаем Ollama
+RUN curl -fsSL https://ollama.com/install.sh | sh
+
+# Указываем рабочую директорию
+WORKDIR /root
+
+# Открываем порт для API
+EXPOSE 11434
+
+# Команда запуска
+CMD ["ollama", "serve"]
