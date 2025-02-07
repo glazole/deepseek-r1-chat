@@ -1,6 +1,7 @@
 import gradio as gr
 from langchain_ollama import ChatOllama
 import requests  # Добавил import
+import torch
 
 # Тест Ollama перед запуском Gradio
 def test_ollama_connection():
@@ -30,10 +31,15 @@ from langchain_core.messages import HumanMessage, AIMessage, SystemMessage
 
 # Initialize the chat engine
 def get_llm_engine(model_name):
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    print(f"Using device: {device}")
+
+    # Предполагается, что ChatOllama поддерживает передачу устройства
     return ChatOllama(
         model=model_name,
         base_url="http://127.0.0.1:11434",
-        temperature=0.3
+        temperature=0.3,
+        device=device  # Передача устройства, если поддерживается
     )
 
 # System prompt configuration
@@ -52,19 +58,18 @@ class ChatBot:
         self.chat_history = []
 
     def generate_ai_response(self, user_input, llm_engine):
-        # Add user message to chat history
         self.chat_history.append(HumanMessage(content=user_input))
-        
-        # Generate response
-        chain = chat_prompt | llm_engine | StrOutputParser()
-        response = chain.invoke({
-            "input": user_input,
-            "chat_history": self.chat_history
-        })
-        
-        # Add AI response to chat history
-        self.chat_history.append(AIMessage(content=response))
-        return response
+        try:
+            chain = chat_prompt | llm_engine | StrOutputParser()
+            response = chain.invoke({
+                "input": user_input,
+                "chat_history": self.chat_history
+            })
+            self.chat_history.append(AIMessage(content=response))
+            return response
+        except Exception as e:
+            print("Error generating AI response:", e)
+            return "Sorry, I encountered an error while generating the response."
 
     def chat(self, message, model_choice, history):
         if not message:
@@ -101,7 +106,8 @@ def create_demo():
             with gr.Column(scale=4):
                 chatbot_component = gr.Chatbot(
                     value=[(None, "Hi! I'm DeepSeek. How can I help you code today? 💻")],
-                    height=500
+                    height=500,
+                    type='messages'
                 )
                 msg = gr.Textbox(
                     placeholder="Type your coding question here...",
