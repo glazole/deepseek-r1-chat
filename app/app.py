@@ -62,7 +62,7 @@ chat_prompt = ChatPromptTemplate.from_messages([
 class ChatBot:
     def __init__(self):
         self.chat_history = [
-            AIMessage(content="Hi! I'm DeepSeek. How can I help you code today? 💻")
+            {"role": "ai", "content": "Hi! I'm DeepSeek. How can I help you code today? 💻"}
         ]
 
     def generate_ai_response(self, user_input, llm_engine):
