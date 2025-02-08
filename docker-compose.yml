@@ -16,11 +16,11 @@ services:
       - NVIDIA_VISIBLE_DEVICES=all
       - NVIDIA_DRIVER_CAPABILITIES=compute,utility
       - OLLAMA_BACKEND=cuda
-      - OLLAMA_HOST=0.0.0.0:11434
+      # - OLLAMA_HOST=0.0.0.0:11434
     volumes:
       - ./models:/root/.ollama/models
-    ports:
-      - "11434:11434"
+    # ports:
+    #   - "11434:11434"
     restart: unless-stopped
     entrypoint: ["/bin/sh", "-c"]
     command:
@@ -45,6 +45,8 @@ services:
         fi
         echo "✅ Все готово!"
         wait
+    networks:
+      - Ollama_DS
 
 
   gradio:
@@ -61,3 +63,9 @@ services:
     volumes:
       - ./app:/app
     restart: unless-stopped
+    networks:
+      - Ollama_DS
+networks:
+  Ollama_DS:
+    driver: bridge
+
