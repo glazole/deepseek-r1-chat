@@ -89,7 +89,7 @@ class ChatBot:
         # Обновляем историю в формате Gradio (список кортежей)
         history.append((message, ai_response))
 
-        return "", history
+        return history
 
 def create_demo():
     chatbot = ChatBot()
