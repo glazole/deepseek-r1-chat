@@ -4,10 +4,13 @@ import logging
 from langchain_ollama import ChatOllama
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.prompts import (
-    MessagesPlaceholder,
-    ChatPromptTemplate
+    SystemMessagePromptTemplate,
+    HumanMessagePromptTemplate,
+    AIMessagePromptTemplate,
+    ChatPromptTemplate,
+    MessagesPlaceholder
 )
-from langchain_core.messages import HumanMessage, AIMessage
+from langchain_core.messages import HumanMessage, AIMessage, SystemMessage
 
 # Настройка логирования
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
@@ -48,11 +51,11 @@ chat_prompt = ChatPromptTemplate.from_messages([
 class ChatBot:
     def __init__(self):
         self.chat_history = [
-            "## Hi! I'm DeepSeek.\n\nHow can I help you code today? 💻"
+            {"role": "assistant", "content": "Hi! I'm DeepSeek. How can I help you code today? 💻"}
         ]
 
     def generate_ai_response(self, user_input, llm_engine):
-        """Генерация ответа от AI (Markdown формат сохраняется)"""
+        """Генерация ответа от AI (без удаления тегов)"""
         logging.info(f"📝 Отправка запроса: {user_input}")
 
         # Запрос к модели
@@ -64,12 +67,12 @@ class ChatBot:
 
         logging.info(f"💡 Полный ответ от модели: {response}")
 
-        return response  # Передаем Markdown, как есть
+        return response  # Оставляем ответ без изменений (с `<think>` и прочим)
 
     def chat(self, message, model_choice, history):
         """Обработка чата в Gradio"""
-        if isinstance(history, str):  # Если история передана как строка, превращаем в список
-            history = history.split("\n")
+        if not message:
+            return history, ""  # Возвращаем историю без изменений
 
         logging.debug(f"📩 Входящее сообщение: {message}")
         logging.debug(f"🔄 Выбранная модель: {model_choice}")
@@ -78,16 +81,15 @@ class ChatBot:
         logging.debug("✅ LLM-движок успешно инициализирован")
         
         # Добавляем сообщение пользователя в историю
-        history.append(f"**You:** {message}")
+        history.append({"role": "user", "content": message})
 
         # Генерация ответа
         ai_response = self.generate_ai_response(message, llm_engine)
         
-        # Добавляем ответ AI в историю
-        history.append(f"**DeepSeek:**\n\n{ai_response}")
+        # Добавляем ответ AI в историю (сохраняем полный текст)
+        history.append({"role": "assistant", "content": ai_response})
 
-        # Принудительное обновление UI
-        return gr.update(value="\n".join(history)), ""
+        return history, ""  # Возвращаем обновленную историю и очищаем поле ввода
 
 def create_demo():
     chatbot = ChatBot()
@@ -98,7 +100,13 @@ def create_demo():
         
         with gr.Row():
             with gr.Column(scale=4):
-                chat_output = gr.Markdown("## Chat History\n\n", elem_id="chat-history", height=500)
+                chatbot_component = gr.Chatbot(
+                    value=[
+                        {"role": "assistant", "content": "Hi! I'm DeepSeek. How can I help you code today? 💻"}
+                    ],
+                    height=500,
+                    type="messages"  # Используем правильный формат для передачи текста
+                )
                 msg = gr.Textbox(
                     placeholder="Type your coding question here...",
                     show_label=False
@@ -123,8 +131,8 @@ def create_demo():
 
         msg.submit(
             fn=chatbot.chat,
-            inputs=[msg, model_dropdown, chat_output],
-            outputs=[chat_output, msg]  # Очищаем поле ввода после отправки
+            inputs=[msg, model_dropdown, chatbot_component],
+            outputs=[chatbot_component, msg]  # Очищаем поле ввода после отправки
         )
 
     return demo
