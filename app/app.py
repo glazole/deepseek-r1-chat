@@ -76,20 +76,19 @@ class ChatBot:
         return response
 
     def chat(self, message, model_choice, history):
-        """Обработка чата в Gradio"""
         if not message:
-            return "", history
+            return history  # Возвращаем текущую историю, ничего не меняя
 
-        # Инициализация LLM-движка
         llm_engine = get_llm_engine(model_choice)
 
-        # Генерация ответа
         ai_response = self.generate_ai_response(message, llm_engine)
 
-        # Обновляем историю в формате Gradio (список кортежей)
-        history.append((message, ai_response))
+        # Добавляем сообщения в историю в формате OpenAI-style
+        history.append({"role": "user", "content": message})
+        history.append({"role": "ai", "content": ai_response})
 
-        return history
+        return history  # Gradio теперь ожидает такой формат
+
 
 def create_demo():
     chatbot = ChatBot()
@@ -101,11 +100,12 @@ def create_demo():
         with gr.Row():
             with gr.Column(scale=4):
                 chatbot_component = gr.Chatbot(
-                    value=[(None, "Hi! I'm DeepSeek. How can I help you code today? 💻")],  
+                    value=[{"role": "ai", "content": "Hi! I'm DeepSeek. How can I help you code today? 💻"}],  
                     show_copy_button=True,
                     height=500,
+                    type="messages"  # Новый формат сообщений OpenAI
                 )
-                
+
                 msg = gr.Textbox(
                     placeholder="Type your coding question here...",
                     show_label=False
