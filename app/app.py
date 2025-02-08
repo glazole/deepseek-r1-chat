@@ -52,14 +52,16 @@ chat_prompt = ChatPromptTemplate.from_messages([
 # Класс чат-бота
 class ChatBot:
     def __init__(self):
-        self.chat_history = []
+        self.chat_history = [
+            # {"role": "assistant", "content": "Hi! I'm **DeepSeek**. How can I help you code today? 💻"}
+        ]
 
     def generate_ai_response(self, user_input, llm_engine):
         logging.info(f"📝 Отправка запроса в модель: {user_input}")
-
+        self.chat_history.append(HumanMessage(content=user_input))
         chain = chat_prompt | llm_engine | StrOutputParser()
         response = chain.invoke({"input": user_input, "chat_history": self.chat_history}) or "⚠️ Ошибка: модель не вернула ответ."
-
+        self.chat_history.append(AIMessage(content=response))
         logging.info(f"💡 Полный ответ от модели: {response}")
         return response
 
