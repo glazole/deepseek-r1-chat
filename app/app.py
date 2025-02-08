@@ -35,11 +35,11 @@ def test_ollama_connection():
 test_ollama_connection()
 
 # Инициализация движка LLM
-def get_llm_engine(model_name, temperature):
+def get_llm_engine(model_name):
     return ChatOllama(
         model=model_name,
         base_url=OLLAMA_API,
-        temperature=temperature
+        temperature=0.3
     )
 
 # Настройки системного промпта
