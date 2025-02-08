@@ -63,6 +63,16 @@ services:
     volumes:
       - ./app:/app
     restart: unless-stopped
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - |
+        echo "⏳ Ожидание Ollama..."
+        until curl -s http://ollama:11434/api/tags > /dev/null; do
+          echo "⚠️  Ollama еще не готов, ждем..."
+          sleep 2
+        done
+        echo "✅ Ollama доступен, запускаем Gradio..."
+        python app.py
     networks:
       - Ollama_DS
 networks:
