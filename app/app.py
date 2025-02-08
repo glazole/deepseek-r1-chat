@@ -1,14 +1,13 @@
 import gradio as gr
 import requests
 import logging
-import threading
 import time
 from langchain_ollama import ChatOllama
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.prompts import (
-    SystemMessagePromptTemplate,
-    HumanMessagePromptTemplate,
-    AIMessagePromptTemplate,
+    # SystemMessagePromptTemplate,
+    # HumanMessagePromptTemplate,
+    # AIMessagePromptTemplate,
     ChatPromptTemplate,
     MessagesPlaceholder
 )
@@ -59,6 +58,7 @@ chat_prompt = ChatPromptTemplate.from_messages([
     MessagesPlaceholder(variable_name="chat_history"),
     ("human", "{input}")
 ])
+
 class ChatBot:
     def __init__(self):
         self.chat_history = []
@@ -83,14 +83,11 @@ class ChatBot:
         # Инициализация LLM-движка
         llm_engine = get_llm_engine(model_choice)
 
-        # Добавляем сообщение пользователя в историю
-        history.append({"role": "user", "content": message})
-
         # Генерация ответа
         ai_response = self.generate_ai_response(message, llm_engine)
 
-        # Обновляем историю сообщений
-        history.append({"role": "ai", "content": ai_response})
+        # Обновляем историю в формате Gradio (список кортежей)
+        history.append((message, ai_response))
 
         return "", history
 
@@ -104,10 +101,9 @@ def create_demo():
         with gr.Row():
             with gr.Column(scale=4):
                 chatbot_component = gr.Chatbot(
-                    value=[{"role": "ai", "content": "Hi! I'm DeepSeek. How can I help you code today? 💻"}],
+                    value=[(None, "Hi! I'm DeepSeek. How can I help you code today? 💻")],  
                     show_copy_button=True,
                     height=500,
-                    type="messages"  # Указываем правильный формат
                 )
                 
                 msg = gr.Textbox(
@@ -136,7 +132,7 @@ def create_demo():
             fn=chatbot.chat,
             inputs=[msg, model_dropdown, chatbot_component],
             outputs=[msg, chatbot_component]
-            )
+        )
 
     return demo
 
