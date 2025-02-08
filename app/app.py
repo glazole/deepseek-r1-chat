@@ -2,6 +2,7 @@ import gradio as gr
 import requests
 import logging
 import threading
+import time
 from langchain_ollama import ChatOllama
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.prompts import (
@@ -23,13 +24,21 @@ OLLAMA_API = "http://ollama:11434"
 stop_flag = threading.Event()
 
 # Проверка подключения к Ollama перед запуском
-def test_ollama_connection():
-    try:
-        response = requests.get(f"{OLLAMA_API}/api/tags", timeout=5)
-        response.raise_for_status()
-        logging.info("✅ Успешное подключение к Ollama")
-    except requests.exceptions.RequestException as e:
-        logging.error(f"❌ Ошибка подключения к Ollama: {e}")
+def test_ollama_connection(retries=3, delay=3):
+    for i in range(retries):
+        try:
+            response = requests.get(f"{OLLAMA_API}/api/tags", timeout=5)
+            response.raise_for_status()
+            logging.info("✅ Успешное подключение к Ollama")
+            return True
+        except requests.exceptions.RequestException as e:
+            logging.warning(f"❌ Ошибка подключения ({i+1}/{retries}): {e}")
+            time.sleep(delay)
+    logging.error("🚨 Не удалось подключиться к Ollama после нескольких попыток")
+    return False
+
+if not test_ollama_connection():
+    exit(1)  # Прерываем запуск, если Ollama недоступен
 
 # Запускаем тестовое подключение
 test_ollama_connection()
@@ -47,36 +56,35 @@ SYSTEM_TEMPLATE = """You are an expert AI coding assistant. Provide concise, cor
 with strategic print statements for debugging. Always respond in English."""
 
 chat_prompt = ChatPromptTemplate.from_messages([
-    ("system", SYSTEM_TEMPLATE),
+    SystemMessagePromptTemplate.from_template(SYSTEM_TEMPLATE),
     MessagesPlaceholder(variable_name="chat_history"),
-    ("human", "{input}")
+    HumanMessagePromptTemplate.from_template("{input}")
 ])
-
 class ChatBot:
     def __init__(self):
-        self.message_log = [
-            {"role": "assistant", "content": "Hi! I'm DeepSeek. How can I help you code today? 💻"}
-        ]
-        self.chat_history = []
+        self.chat_history = [AIMessage(content="Hi! I'm DeepSeek. How can I help you code today? 💻")]
 
     def generate_ai_response(self, user_input, llm_engine):
-        """Генерация ответа от AI (без удаления тегов)"""
+        stop_flag.clear()  # Сбрасываем флаг перед генерацией
+
+        if stop_flag.is_set():
+            logging.warning("⛔ Генерация остановлена пользователем")
+            return "⚠️ Остановлено пользователем"
+
         logging.info(f"📝 Отправка запроса: {user_input}")
         self.chat_history.append(HumanMessage(content=user_input))
-        stop_flag.clear()
 
-        # Запрос к модели
-        chain = chat_prompt | llm_engine | StrOutputParser()
-        response = chain.invoke({
-            "input": user_input, 
-            "chat_history": self.chat_history
-        })
+        try:
+            chain = chat_prompt | llm_engine | StrOutputParser()
+            response = chain.invoke({"input": user_input, "chat_history": self.chat_history}) or "⚠️ Ошибка: модель не вернула ответ."
+        except Exception as e:
+            logging.error(f"❌ Ошибка генерации: {e}")
+            response = "⚠️ Ошибка обработки запроса."
 
         self.chat_history.append(AIMessage(content=response))
-
         logging.info(f"💡 Полный ответ от модели: {response}")
 
-        return response  # Оставляем ответ без изменений (с `<think>` и прочим)
+        return response
 
     def chat(self, message, model_choice, history):
         """Обработка чата в Gradio"""
@@ -86,29 +94,31 @@ class ChatBot:
         logging.debug(f"📩 Входящее сообщение: {message}")
         logging.debug(f"🔄 Выбранная модель: {model_choice}")
 
+        # Инициализация LLM-движка
         llm_engine = get_llm_engine(model_choice)
         logging.debug("✅ LLM-движок успешно инициализирован")
 
-        self.message_log.append({"role": "user", "content": message})
-        
         # Генерация ответа
         ai_response = self.generate_ai_response(message, llm_engine)
-        
-        # Добавляем ответ AI в историю (сохраняем полный текст)
-        self.message_log.append({"role": "assistant", "content": ai_response})
 
+        # Обновляем историю сообщений
         history.append((message, ai_response))
 
-        return "", history
-    
+        return "", history  # Очищаем поле ввода
+
     def stop_generation(self):
         """Остановка генерации"""
+        logging.warning("⛔ Остановка генерации пользователем")
         stop_flag.set()
 
     def clear_chat(self):
         """Очистка чата"""
-        self.chat_history = []
-        return []
+        logging.info("🗑 Очистка истории чата")
+        self.chat_history = [
+            AIMessage(content="Hi! I'm DeepSeek. How can I help you code today? 💻")
+        ]
+        return [], []
+
 
 def create_demo():
     chatbot = ChatBot()
@@ -117,19 +127,17 @@ def create_demo():
         gr.Markdown("# 🧠 DeepSeek Code Companion")
         gr.Markdown("🚀 Your AI Pair Programmer with Debugging Superpowers")
         
+        history_state = gr.State([])  # Храним историю сообщений
+        
         with gr.Row():
             with gr.Column(scale=4):
-                chatbot_component = gr.Chatbot(
-                    value=[
-                        (None, "Hi! I'm DeepSeek. How can I help you code today? 💻")
-                    ],
-                    height=500,
-                    # type="messages"  # Используем правильный формат для передачи текста
-                )
+                chatbot_component = gr.Chatbot(value=[], height=500)
+                
                 msg = gr.Textbox(
                     placeholder="Type your coding question here...",
                     show_label=False
                 )
+                
                 with gr.Row():
                     stop_btn = gr.Button("⛔ Stop")
                     clear_btn = gr.Button("🗑 Clear")
@@ -150,15 +158,21 @@ def create_demo():
                 
                 gr.Markdown("Built with [Ollama](https://ollama.ai/) | [LangChain](https://python.langchain.com/)")
 
+        # Обрабатываем ввод сообщений
         msg.submit(
             fn=chatbot.chat,
-            inputs=[msg, model_dropdown, chatbot_component],
-            outputs=[msg, chatbot_component]  # Очищаем поле ввода после отправки
+            inputs=[msg, model_dropdown, history_state],
+            outputs=[msg, chatbot_component, history_state]  # Добавляем history_state
         )
+
+        # Остановка генерации
         stop_btn.click(fn=chatbot.stop_generation, inputs=[], outputs=[])
-        clear_btn.click(fn=chatbot.clear_chat, inputs=[], outputs=[chatbot_component])
+
+        # Очистка чата
+        clear_btn.click(fn=chatbot.clear_chat, inputs=[], outputs=[chatbot_component, history_state])
 
     return demo
+
 
 if __name__ == "__main__":
     demo = create_demo()
