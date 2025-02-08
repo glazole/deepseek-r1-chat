@@ -71,7 +71,7 @@ services:
     command:
       - |
         echo "⏳ Ожидание Ollama..."
-        until curl -s http://ollama:11434/api/tags > /dev/null; do
+        until curl -s http://localhost:11434/api/tags > /dev/null; do
           echo "⚠️  Ollama еще не готов, ждем..."
           sleep 2
         done
