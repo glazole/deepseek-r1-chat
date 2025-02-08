@@ -20,9 +20,6 @@ logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(
 # URL Ollama API
 OLLAMA_API = "http://ollama:11434"
 
-# Флаг остановки генерации
-stop_flag = threading.Event()
-
 # Проверка подключения к Ollama перед запуском
 def test_ollama_connection(retries=3, delay=3):
     for i in range(retries):
@@ -64,16 +61,17 @@ chat_prompt = ChatPromptTemplate.from_messages([
 ])
 class ChatBot:
     def __init__(self):
-        self.chat_history = [{"role": "ai", "content": "Hi! I'm DeepSeek. How can I help you code today? 💻"}]
+        self.chat_history = [
+            AIMessage(content="Hi! I'm DeepSeek. How can I help you code today? 💻")
+        ]
 
     def generate_ai_response(self, user_input, llm_engine):
-        
-        logging.info(f"📝 Отправка запроса: {user_input}")
+        logging.info(f"📝 Отправка запроса в модель: {user_input}")
         self.chat_history.append(HumanMessage(content=user_input))
 
-        chain= chat_prompt | llm_engine | StrOutputParser()
+        chain = chat_prompt | llm_engine | StrOutputParser()
         response = chain.invoke({"input": user_input, "chat_history": self.chat_history}) or "⚠️ Ошибка: модель не вернула ответ."
-           
+
         self.chat_history.append(AIMessage(content=response))
         logging.info(f"💡 Полный ответ от модели: {response}")
 
@@ -82,24 +80,22 @@ class ChatBot:
     def chat(self, message, model_choice, history):
         """Обработка чата в Gradio"""
         if not message:
-            return history, ""
-
-        logging.debug(f"📩 Входящее сообщение: {message}")
-        logging.debug(f"🔄 Выбранная модель: {model_choice}")
+            return "", history  # Если пустое сообщение, ничего не делаем
 
         # Инициализация LLM-движка
         llm_engine = get_llm_engine(model_choice)
-        logging.debug("✅ LLM-движок успешно инициализирован")
 
-        history.append({"role": "user", "content": message})
+        # Добавляем сообщение пользователя в историю
+        history.append((message, "💭 ..."))  # Временно показываем "..."
 
         # Генерация ответа
         ai_response = self.generate_ai_response(message, llm_engine)
 
         # Обновляем историю сообщений
-        history.append({"role": "ai", "content": ai_response})
+        history[-1] = (message, ai_response)  # Заменяем "..." на ответ модели
 
-        return history, "" # Очищаем поле ввода
+        return "", history  # Очищаем поле ввода
+
 
     def clear_chat(self):
         """Очистка чата"""
@@ -120,9 +116,8 @@ def create_demo():
         with gr.Row():
             with gr.Column(scale=4):
                 chatbot_component = gr.Chatbot(
-                    value=[],
+                    value=[(None, "Hi! I'm DeepSeek. How can I help you code today? 💻")],
                     show_copy_button=True,
-                    sanitize_html=False,
                     height=500, 
                     type="messages")
                 
@@ -156,6 +151,13 @@ def create_demo():
             inputs=[msg, model_dropdown, chatbot_component],
             outputs=[msg, chatbot_component]
         )
+        send_btn = gr.Button("📩 Send")  # Кнопка отправки
+
+        send_btn.click(  # Отправка при нажатии кнопки
+            fn=chatbot.chat,
+            inputs=[msg, model_dropdown, chatbot_component],
+            outputs=[msg, chatbot_component]
+)
 
         # Очистка чата
         clear_btn.click(fn=chatbot.clear_chat, inputs=[], outputs=[msg, chatbot_component], queue=False)
