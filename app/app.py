@@ -131,7 +131,7 @@ def create_demo():
         
         with gr.Row():
             with gr.Column(scale=4):
-                chatbot_component = gr.Chatbot(value=[], height=500)
+                chatbot_component = gr.Chatbot(value=[], height=500, type="messages")
                 
                 msg = gr.Textbox(
                     placeholder="Type your coding question here...",
@@ -169,7 +169,7 @@ def create_demo():
         stop_btn.click(fn=chatbot.stop_generation, inputs=[], outputs=[])
 
         # Очистка чата
-        clear_btn.click(fn=chatbot.clear_chat, inputs=[], outputs=[chatbot_component, history_state])
+        clear_btn.click(fn=chatbot.clear_chat, inputs=[], outputs=[chatbot_component])
 
     return demo
 
