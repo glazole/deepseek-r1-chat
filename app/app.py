@@ -159,7 +159,6 @@ def create_demo():
             outputs=[chatbot_component, msg]  # Чат первым, поле ввода вторым!
         )
 
-
         # Очистка чата
         clear_btn.click(fn=chatbot.clear_chat, inputs=[], outputs=[msg, chatbot_component], queue=False)
 
