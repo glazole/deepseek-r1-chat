@@ -68,19 +68,24 @@ class ChatBot:
 
             full_response = ""
             for line in response.split("\n"):
+                if not line.strip():
+                    continue  # Пропускаем пустые строки
                 try:
-                    json_data = json.loads(line)  # Парсим каждую строку как JSON
-                    if "message" in json_data and "content" in json_data["message"]:
+                    json_data = json.loads(line)  # Парсим строку как JSON
+                    if isinstance(json_data, dict) and "message" in json_data and "content" in json_data["message"]:
                         full_response += json_data["message"]["content"]
+                    else:
+                        logging.warning(f"⚠️ Не JSON: {line}")
                 except json.JSONDecodeError:
-                    logging.warning(f"Не удалось разобрать JSON: {line}")
+                    logging.warning(f"⚠️ Ошибка JSON: {line}")
 
             self.chat_history.append(AIMessage(content=full_response.strip()))
             return full_response.strip()
 
         except Exception as e:
-            logging.error(f"Error generating AI response: {e}")
-            return "Sorry, I encountered an error while generating the response."
+            logging.error(f"❌ Ошибка AI: {e}")
+            return "Ошибка: Не удалось обработать ответ от Ollama"
+
 
     def chat(self, message, model_choice, history):
         if not message:
