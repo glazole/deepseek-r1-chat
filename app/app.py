@@ -80,7 +80,7 @@ class ChatBot:
     def chat(self, message, model_choice, history):
         """Обработка чата в Gradio"""
         if not message:
-            return "", history  # Если пустое сообщение, ничего не делаем
+            return history, ""  # Если пустое сообщение, ничего не делаем
 
         # Инициализация LLM-движка
         llm_engine = get_llm_engine(model_choice)
@@ -94,7 +94,7 @@ class ChatBot:
         # Обновляем историю сообщений
         history.append({"role": "ai", "content": ai_response})
 
-        return "", history  # Очищаем поле ввода
+        return history, ""  # Очищаем поле ввода
 
 
 
@@ -129,6 +129,7 @@ def create_demo():
                 )
                 
                 with gr.Row():
+                    send_btn = gr.Button("📩 Send message")  # Кнопка отправки
                     clear_btn = gr.Button("🗑 Clear chat")
                 
             with gr.Column(scale=1):
@@ -153,7 +154,6 @@ def create_demo():
             inputs=[msg, model_dropdown, chatbot_component],
             outputs=[msg, chatbot_component]
         )
-        send_btn = gr.Button("📩 Send")  # Кнопка отправки
 
         send_btn.click(  # Отправка при нажатии кнопки
             fn=chatbot.chat,
