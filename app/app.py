@@ -42,12 +42,13 @@ if not test_ollama_connection():
 
 # Инициализация движка LLM
 def get_llm_engine(model_name):
+    logging.info(f"🚀 Инициализация модели {model_name}")
     try:
         return ChatOllama(
             model=model_name,
             base_url=OLLAMA_API,
             temperature=0.3
-        )
+        ) 
     except Exception as e:
         logging.error(f"❌ Ошибка инициализации модели {model_name}: {e}")
         return None
@@ -106,7 +107,7 @@ class ChatBot:
     def chat(self, message, model_choice, history):
         """Обработка чата в Gradio"""
         if not message:
-            return "", history
+            return history, ""
 
         logging.debug(f"📩 Входящее сообщение: {message}")
         logging.debug(f"🔄 Выбранная модель: {model_choice}")
@@ -123,13 +124,7 @@ class ChatBot:
         # Обновляем историю сообщений
         history.append({"role": "ai", "content": ai_response})
 
-        return "", history # Очищаем поле ввода
-
-    def stop_generation(self):
-        """Остановка генерации"""
-        logging.warning("⛔ Остановка генерации пользователем")
-        stop_flag.set()
-        return "⚠️ Генерация остановлена", []
+        return history, "" # Очищаем поле ввода
 
     def clear_chat(self):
         """Очистка чата"""
@@ -152,6 +147,7 @@ def create_demo():
                 chatbot_component = gr.Chatbot(
                     value=[],
                     show_copy_button=True,
+                    sanitize_html=True,
                     height=500, 
                     type="messages")
                 
@@ -186,9 +182,6 @@ def create_demo():
             inputs=[msg, model_dropdown, chatbot_component],
             outputs=[msg, chatbot_component]
         )
-
-        # Остановка генерации
-        stop_btn.click(fn=chatbot.stop_generation, inputs=[], outputs=[msg])
 
         # Очистка чата
         clear_btn.click(fn=chatbot.clear_chat, inputs=[], outputs=[msg, chatbot_component])
