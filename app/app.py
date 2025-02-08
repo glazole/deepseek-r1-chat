@@ -16,7 +16,7 @@ from langchain_core.messages import HumanMessage, AIMessage, SystemMessage
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
 
 # URL Ollama API
-OLLAMA_API = "http://ollama:11434"
+OLLAMA_API = "http://127.0.0.1:11434"
 
 # Проверка подключения к Ollama перед запуском
 def test_ollama_connection():
@@ -91,7 +91,7 @@ class ChatBot:
         # Добавляем ответ AI в лог
         self.message_log.append({"role": "ai", "content": ai_response})
         
-        # Обновляем историю сообщений
+        # Обновляем историю сообщений (важно: корректный формат)
         history.append((message, ai_response))
         return "", history
 
@@ -105,8 +105,9 @@ def create_demo():
         with gr.Row():
             with gr.Column(scale=4):
                 chatbot_component = gr.Chatbot(
-                    value=[(None, "Hi! I'm DeepSeek. How can I help you code today? 💻")],
-                    height=500
+                    value=[("Hello!", "Hi! I'm DeepSeek. How can I help you code today? 💻")],
+                    height=500,
+                    type="messages"  # Добавлено для совместимости с Gradio 4.x+
                 )
                 msg = gr.Textbox(
                     placeholder="Type your coding question here...",
@@ -115,7 +116,7 @@ def create_demo():
                 
             with gr.Column(scale=1):
                 model_dropdown = gr.Dropdown(
-                    choices=["deepseek-r1:1.5b", "deepseek-r1:3b"],
+                    choices=["deepseek-r1:1.5b", "deepseek-r1:7b"],
                     value="deepseek-r1:1.5b",
                     label="Choose Model"
                 )
