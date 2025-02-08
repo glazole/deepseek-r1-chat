@@ -86,24 +86,25 @@ class ChatBot:
         llm_engine = get_llm_engine(model_choice)
 
         # Добавляем сообщение пользователя в историю
-        history.append((message, "💭 ..."))  # Временно показываем "..."
+        history.append({"role": "user", "content": message})
 
         # Генерация ответа
         ai_response = self.generate_ai_response(message, llm_engine)
 
         # Обновляем историю сообщений
-        history[-1] = (message, ai_response)  # Заменяем "..." на ответ модели
+        history.append({"role": "ai", "content": ai_response})
 
         return "", history  # Очищаем поле ввода
+
 
 
     def clear_chat(self):
         """Очистка чата"""
         logging.info("🗑 Очистка истории чата")
         self.chat_history = [
-            AIMessage(content="Hi! I'm DeepSeek. How can I help you code today? 💻")
+            {"role": "ai", "content": "Hi! I'm DeepSeek. How can I help you code today? 💻"}
         ]
-        return "", []
+        return "", self.chat_history
 
 
 def create_demo():
@@ -116,10 +117,11 @@ def create_demo():
         with gr.Row():
             with gr.Column(scale=4):
                 chatbot_component = gr.Chatbot(
-                    value=[(None, "Hi! I'm DeepSeek. How can I help you code today? 💻")],
+                    value=[{"role": "ai", "content": "Hi! I'm DeepSeek. How can I help you code today? 💻"}],
                     show_copy_button=True,
-                    height=500, 
-                    type="messages")
+                    height=500,
+                    type="messages"  # Указываем правильный формат
+                )
                 
                 msg = gr.Textbox(
                     placeholder="Type your coding question here...",
