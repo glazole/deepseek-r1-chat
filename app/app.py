@@ -16,7 +16,7 @@ from langchain_core.messages import HumanMessage, AIMessage, SystemMessage
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
 
 # URL Ollama API
-OLLAMA_API = "http://127.0.0.1:11434"
+OLLAMA_API = "http://ollama:11434"
 
 # Проверка подключения к Ollama перед запуском
 def test_ollama_connection():
