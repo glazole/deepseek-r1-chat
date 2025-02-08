@@ -37,11 +37,11 @@ def test_ollama_connection(retries=3, delay=3):
     logging.error("🚨 Не удалось подключиться к Ollama после нескольких попыток")
     return False
 
-if not test_ollama_connection():
-    exit(1)  # Прерываем запуск, если Ollama недоступен
-
 # Запускаем тестовое подключение
 test_ollama_connection()
+
+if not test_ollama_connection():
+    exit(1)  # Прерываем запуск, если Ollama недоступен
 
 # Инициализация движка LLM
 def get_llm_engine(model_name):
