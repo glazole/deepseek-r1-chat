@@ -1,7 +1,7 @@
 import gradio as gr
 from langchain_ollama import ChatOllama
 import requests
-import torch
+# import torch
 import logging
 import json
 
@@ -33,8 +33,8 @@ from langchain_core.messages import HumanMessage, AIMessage
 
 # Инициализация LLM
 def get_llm_engine(model_name):
-    device = "cuda" if torch.cuda.is_available() else "cpu"
-    logging.info(f"Using device: {device}")
+    # device = "cuda" if torch.cuda.is_available() else "cpu"
+    # logging.info(f"Using device: {device}")
 
     return ChatOllama(
         model=model_name,
