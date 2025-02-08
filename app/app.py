@@ -41,7 +41,7 @@ def get_llm_engine(model_name):
 
 # Настройки системного промпта
 SYSTEM_TEMPLATE = """You are an expert AI coding assistant. Provide concise, correct solutions 
-with strategic print statements for debugging. Always respond in English."""
+with strategic print statements for debugging. Always respond in English using Markdown formatting for better readability."""
 
 chat_prompt = ChatPromptTemplate.from_messages([
     ("system", SYSTEM_TEMPLATE),
@@ -74,6 +74,8 @@ class ChatBot:
         history.append({"role": "user", "content": message})
         history.append({"role": "assistant", "content": ai_response})  # OpenAI-style требует "assistant"
 
+        logging.info(f"📜 Обновленная история чата: {history}")
+
         return "", history  # Gradio теперь сам очищает ввод
         
 
@@ -88,10 +90,11 @@ def create_demo():
         with gr.Row():
             with gr.Column(scale=4):
                 chatbot_component = gr.Chatbot(
-                    value=[{"role": "assistant", "content": "Hi! I'm DeepSeek. How can I help you code today? 💻"}],  
+                    value=[{"role": "assistant", "content": "Hi! I'm **DeepSeek**. How can I help you code today? 💻"}],  
                     show_copy_button=True,
                     height=500,
-                    type="messages"
+                    type="messages",
+                    allow_markdown=True
                 )
                 msg = gr.Textbox(placeholder="Type your coding question here...", show_label=False)
 
