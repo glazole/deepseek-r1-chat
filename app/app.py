@@ -1,17 +1,16 @@
 import gradio as gr
 from langchain_ollama import ChatOllama
 import requests
-# import torch
 import logging
 import json
 
 # Настройка логирования
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
 
-# Новый URL Ollama в Docker
-OLLAMA_API = "http://ollama:11434"  # Исправлено
+# URL Ollama в Docker
+OLLAMA_API = "http://ollama:11434"
 
-# Тест Ollama перед запуском Gradio
+# Проверка подключения к Ollama
 def test_ollama_connection():
     payload = {
         "model": "deepseek-r1:1.5b",
@@ -19,32 +18,32 @@ def test_ollama_connection():
                      {"role": "user", "content": "Hello!"}]
     }
     try:
-        response = requests.post(f"{OLLAMA_API}/api/chat", json=payload)  # Исправлено
-        logging.info(f"Test response: {response.json()}")
-    except Exception as e:
+        response = requests.post(f"{OLLAMA_API}/api/chat", json=payload)
+        logging.info(f"Raw response from Ollama: {response.text}")  # Логируем ответ
+        response.raise_for_status()  # Проверяем HTTP-ошибки
+
+        json_data = response.json()  # Парсим JSON
+        logging.info(f"Test response JSON: {json_data}")
+    except requests.exceptions.RequestException as e:
         logging.error(f"Error connecting to Ollama: {e}")
 
-# Вызов тестовой функции
+# Вызываем тестовое подключение
 test_ollama_connection()
 
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 from langchain_core.messages import HumanMessage, AIMessage
 
-# Инициализация LLM
+# Функция получения LLM
 def get_llm_engine(model_name):
-    # device = "cuda" if torch.cuda.is_available() else "cpu"
-    # logging.info(f"Using device: {device}")
-
     return ChatOllama(
         model=model_name,
-        base_url=OLLAMA_API,  # Используем правильный URL Ollama
+        base_url=OLLAMA_API,
         temperature=0.3,
-        stream=True  # Включаем поддержку потокового вывода
+        stream=True
     )
 
-SYSTEM_TEMPLATE = """You are an expert AI coding assistant. Provide concise, correct solutions 
-with strategic logging.info statements for debugging. Always respond in English."""
+SYSTEM_TEMPLATE = """You are an expert AI coding assistant. Provide concise, correct solutions with logging.info statements for debugging. Always respond in English."""
 
 chat_prompt = ChatPromptTemplate.from_messages([
     ("system", SYSTEM_TEMPLATE),
@@ -54,7 +53,6 @@ chat_prompt = ChatPromptTemplate.from_messages([
 
 class ChatBot:
     def __init__(self):
-        self.message_log = [{"role": "assistant", "content": "Hi! I'm DeepSeek. How can I help you code today? 💻"}]
         self.chat_history = []
 
     def generate_ai_response(self, user_input, llm_engine):
@@ -69,69 +67,61 @@ class ChatBot:
             full_response = ""
             for line in response.split("\n"):
                 if not line.strip():
-                    continue  # Пропускаем пустые строки
+                    continue
                 try:
-                    json_data = json.loads(line)  # Парсим строку как JSON
+                    json_data = json.loads(line)
                     if isinstance(json_data, dict) and "message" in json_data and "content" in json_data["message"]:
                         full_response += json_data["message"]["content"]
                     else:
-                        logging.warning(f"⚠️ Не JSON: {line}")
+                        logging.warning(f"⚠️ Unexpected JSON format: {line}")
                 except json.JSONDecodeError:
-                    logging.warning(f"⚠️ Ошибка JSON: {line}")
+                    logging.warning(f"⚠️ Invalid JSON: {line}")
 
             self.chat_history.append(AIMessage(content=full_response.strip()))
             return full_response.strip()
 
         except Exception as e:
-            logging.error(f"❌ Ошибка AI: {e}")
-            return "Ошибка: Не удалось обработать ответ от Ollama"
-
+            logging.error(f"❌ AI Error: {e}")
+            return "Error: Failed to process response from Ollama"
 
     def chat(self, message, model_choice, history):
         if not message:
             return "", history
-        
-        logging.debug(f"[DEBUG] User input: {message}")
-        logging.debug(f"[DEBUG] Selected model: {model_choice}")
+
+        logging.debug(f"User input: {message}")
+        logging.debug(f"Selected model: {model_choice}")
 
         llm_engine = get_llm_engine(model_choice)
-        logging.debug("[DEBUG] LLM engine initialized")
-        
-        self.message_log.append({"role": "user", "content": message})
-        
+        logging.debug("LLM engine initialized")
+
         ai_response = self.generate_ai_response(message, llm_engine)
-        logging.debug(f"[DEBUG] AI response: {ai_response}")
-        
-        self.message_log.append({"role": "ai", "content": ai_response})
-        
-        history.append((message, ai_response))
+        logging.debug(f"AI response: {ai_response}")
+
+        history.append((message, ai_response))  # Форматируем в (str, str) для Gradio
         return "", history
 
 def create_demo():
     chatbot = ChatBot()
-    
+
     with gr.Blocks(theme=gr.themes.Soft(primary_hue="blue", neutral_hue="zinc")) as demo:
         gr.Markdown("# 🧠 DeepSeek Code Companion")
         gr.Markdown("🚀 Your AI Pair Programmer with Debugging Superpowers")
-        
+
         with gr.Row():
             with gr.Column(scale=4):
                 chatbot_component = gr.Chatbot(
-                    value=[(None, "Hi! I'm DeepSeek. How can I help you code today? 💻")],
+                    value=[("Hello!", "Hi! I'm DeepSeek. How can I help you code today? 💻")],  # Формат исправлен
                     height=500,
                 )
-                msg = gr.Textbox(
-                    placeholder="Type your coding question here...",
-                    show_label=False
-                )
-                
+                msg = gr.Textbox(placeholder="Type your coding question here...", show_label=False)
+
             with gr.Column(scale=1):
                 model_dropdown = gr.Dropdown(
                     choices=["deepseek-r1:1.5b", "deepseek-r1:7b"],
                     value="deepseek-r1:1.5b",
                     label="Choose Model"
                 )
-                
+
                 gr.Markdown("### Model Capabilities")
                 gr.Markdown("""
                 - 🐍 Python Expert
@@ -146,7 +136,7 @@ def create_demo():
             fn=chatbot.chat,
             inputs=[msg, model_dropdown, chatbot_component],
             outputs=[chatbot_component]
-        ).then(lambda: "", None, msg)  # Очищает поле после отправки
+        ).then(lambda: "", None, msg)
 
     return demo
 
