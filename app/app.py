@@ -94,7 +94,7 @@ def create_demo():
                     show_copy_button=True,
                     height=500,
                     type="messages",
-                    allow_markdown=True
+                    render_markdown=True,
                 )
                 msg = gr.Textbox(placeholder="Type your coding question here...", show_label=False)
 
