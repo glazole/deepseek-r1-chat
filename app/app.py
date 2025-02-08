@@ -45,11 +45,15 @@ if not test_ollama_connection():
 
 # Инициализация движка LLM
 def get_llm_engine(model_name):
-    return ChatOllama(
-        model=model_name,
-        base_url=OLLAMA_API,
-        temperature=0.3
-    )
+    try:
+        return ChatOllama(
+            model=model_name,
+            base_url=OLLAMA_API,
+            temperature=0.3
+        )
+    except Exception as e:
+        logging.error(f"❌ Ошибка инициализации модели {model_name}: {e}")
+        return None
 
 # Настройки системного промпта
 SYSTEM_TEMPLATE = """You are an expert AI coding assistant. Provide concise, correct solutions 
@@ -74,33 +78,33 @@ class ChatBot:
         logging.info(f"📝 Отправка запроса: {user_input}")
         self.chat_history.append(HumanMessage(content=user_input))
 
-        try:
-            chain = chat_prompt | llm_engine | StrOutputParser()
-            
-            # Запускаем генерацию в отдельном потоке с контролем stop_flag
-            def generate():
-                return chain.invoke({"input": user_input, "chat_history": self.chat_history}) or "⚠️ Ошибка: модель не вернула ответ."
+        response = "⚠️ Ошибка: модель не вернула ответ."  # Значение по умолчанию
 
-            response = None
-            thread = threading.Thread(target=lambda: generate() if not stop_flag.is_set() else None)
-            thread.start()
-            thread.join(timeout=10)  # Даем 10 секунд на выполнение
-            
-            if thread.is_alive():  # Если поток еще работает
-                logging.warning("⏳ Запрос к модели затянулся, прерываем...")
-                stop_flag.set()
-                response = "⚠️ Остановлено пользователем (превышено время ожидания)"
-            else:
-                response = "⚠️ Ошибка: модель не вернула ответ." if response is None else response
+        def generate():
+            nonlocal response
+            if stop_flag.is_set():
+                return
+            try:
+                response = chat_prompt | llm_engine | StrOutputParser()
+                response = response.invoke({"input": user_input, "chat_history": self.chat_history}) or "⚠️ Ошибка: модель не вернула ответ."
+            except Exception as e:
+                logging.error(f"❌ Ошибка генерации: {e}")
+                response = "⚠️ Ошибка обработки запроса."
 
-        except Exception as e:
-            logging.error(f"❌ Ошибка генерации: {e}")
-            response = "⚠️ Ошибка обработки запроса."
+        thread = threading.Thread(target=generate)
+        thread.start()
+        thread.join(timeout=10)  # Ожидание завершения
+
+        if thread.is_alive():  # Если поток еще работает
+            logging.warning("⏳ Запрос к модели затянулся, прерываем...")
+            stop_flag.set()
+            response = "⚠️ Остановлено пользователем (превышено время ожидания)"
 
         self.chat_history.append(AIMessage(content=response))
         logging.info(f"💡 Полный ответ от модели: {response}")
 
         return response
+
 
     def chat(self, message, model_choice, history):
         """Обработка чата в Gradio"""
@@ -134,7 +138,7 @@ class ChatBot:
         self.chat_history = [
             AIMessage(content="Hi! I'm DeepSeek. How can I help you code today? 💻")
         ]
-        return [], []
+        return "", []
 
 
 def create_demo():
@@ -185,7 +189,7 @@ def create_demo():
         )
 
         # Остановка генерации
-        stop_btn.click(fn=chatbot.stop_generation, inputs=[], outputs=[msg, chatbot_component])
+        stop_btn.click(fn=chatbot.stop_generation, inputs=[], outputs=[msg])
 
         # Очистка чата
         clear_btn.click(fn=chatbot.clear_chat, inputs=[], outputs=[msg, chatbot_component])
