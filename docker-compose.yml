@@ -43,6 +43,10 @@ services:
           echo "📥 Загружаем deepseek-r1:7b..."
           ollama pull deepseek-r1:7b
         fi
+        if ! ollama list | grep -q 'deepseek-r1:14b'; then
+          echo "📥 Загружаем deepseek-r1:14b..."
+          ollama pull deepseek-r1:14b
+        fi
         echo "✅ Все готово!"
         wait
     networks:
