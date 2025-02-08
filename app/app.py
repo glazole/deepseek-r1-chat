@@ -35,7 +35,7 @@ def test_ollama_connection():
 test_ollama_connection()
 
 # Инициализация движка LLM
-def get_llm_engine(model_name):
+def get_llm_engine(model_name, temperature):
     return ChatOllama(
         model=model_name,
         base_url=OLLAMA_API,
@@ -66,14 +66,16 @@ class ChatBot:
 
         # Запрос к модели
         chain = chat_prompt | llm_engine | StrOutputParser()
-        response = chain.invoke({
-            "input": user_input,
-            "chat_history": self.chat_history
-        })
+        try:
+            for chunk in chain.stream({"input": user_input, "chat_history": self.chat_history}):
+                if stop_flag.is_set():
+                    return "⛔ Генерация остановлена."
+                response += chunk
+        except Exception as e:
+            logging.error(f"Ошибка генерации: {e}")
+            response = "⚠ Ошибка при генерации ответа."
 
         logging.info(f"💡 Полный ответ от модели: {response}")
-        if stop_flag.is_set():
-            return "⛔ Генерация остановлена."
 
         return response  # Оставляем ответ без изменений (с `<think>` и прочим)
 
