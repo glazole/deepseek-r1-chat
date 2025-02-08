@@ -118,11 +118,13 @@ class ChatBot:
         llm_engine = get_llm_engine(model_choice)
         logging.debug("✅ LLM-движок успешно инициализирован")
 
+        history.append(HumanMessage(content=message))
+
         # Генерация ответа
         ai_response = self.generate_ai_response(message, llm_engine)
 
         # Обновляем историю сообщений
-        history.append((message, ai_response))
+        history.append(AIMessage(content=ai_response))
 
         return "", history # Очищаем поле ввода
 
@@ -195,7 +197,6 @@ def create_demo():
         clear_btn.click(fn=chatbot.clear_chat, inputs=[], outputs=[msg, chatbot_component])
 
     return demo
-
 
 if __name__ == "__main__":
     demo = create_demo()
