@@ -80,7 +80,7 @@ class ChatBot:
     def chat(self, message, model_choice, history):
         """Обработка чата в Gradio"""
         if not message:
-            return history, ""  # Если пустое сообщение, ничего не делаем
+            return "", history  # Если пустое сообщение, ничего не делаем
 
         # Инициализация LLM-движка
         llm_engine = get_llm_engine(model_choice)
@@ -94,7 +94,8 @@ class ChatBot:
         # Обновляем историю сообщений
         history.append({"role": "ai", "content": ai_response})
 
-        return history, ""  # Очищаем поле ввода
+        return history, ""  # Чат обновляется первым, поле ввода очищается вторым
+
 
 
 
@@ -152,14 +153,15 @@ def create_demo():
         msg.submit(
             fn=chatbot.chat,
             inputs=[msg, model_dropdown, chatbot_component],
-            outputs=[msg, chatbot_component]
+            outputs=[chatbot_component, msg]  # Чат первым, поле ввода вторым!
         )
 
-        send_btn.click(  # Отправка при нажатии кнопки
+        send_btn.click(
             fn=chatbot.chat,
             inputs=[msg, model_dropdown, chatbot_component],
-            outputs=[msg, chatbot_component]
-)
+            outputs=[chatbot_component, msg]  # Чат первым, поле ввода вторым!
+        )
+
 
         # Очистка чата
         clear_btn.click(fn=chatbot.clear_chat, inputs=[], outputs=[msg, chatbot_component], queue=False)
