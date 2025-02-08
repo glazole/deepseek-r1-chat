@@ -60,13 +60,13 @@ SYSTEM_TEMPLATE = """You are an expert AI coding assistant. Provide concise, cor
 with strategic print statements for debugging. Always respond in English."""
 
 chat_prompt = ChatPromptTemplate.from_messages([
-    SystemMessagePromptTemplate.from_template(SYSTEM_TEMPLATE),
+    ("system", SYSTEM_TEMPLATE),
     MessagesPlaceholder(variable_name="chat_history"),
-    HumanMessagePromptTemplate.from_template("{input}")
+    ("human", "{input}")
 ])
 class ChatBot:
     def __init__(self):
-        self.chat_history = [AIMessage(content="Hi! I'm DeepSeek. How can I help you code today? 💻")]
+        self.chat_history = [{"role": "ai", "content": "Hi! I'm DeepSeek. How can I help you code today? 💻"}]
 
     def generate_ai_response(self, user_input, llm_engine):
         stop_flag.clear()  # Сбрасываем флаг перед генерацией
@@ -118,13 +118,13 @@ class ChatBot:
         llm_engine = get_llm_engine(model_choice)
         logging.debug("✅ LLM-движок успешно инициализирован")
 
-        history.append(HumanMessage(content=message))
+        history.append({"role": "user", "content": message})
 
         # Генерация ответа
         ai_response = self.generate_ai_response(message, llm_engine)
 
         # Обновляем историю сообщений
-        history.append(AIMessage(content=ai_response))
+        history.append({"role": "ai", "content": ai_response})
 
         return "", history # Очищаем поле ввода
 
