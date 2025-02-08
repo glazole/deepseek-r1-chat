@@ -77,6 +77,12 @@ class ChatBot:
         logging.info(f"📜 Обновленная история чата: {history}")
 
         return "", history  # Gradio теперь сам очищает ввод
+    
+    def chat_test(self, message, model_choice, history):
+        history.append({"role": "user", "content": message})
+        history.append({"role": "assistant", "content": "This is a test response."})
+        return "", history
+
         
 
 # Создание интерфейса Gradio
@@ -118,7 +124,7 @@ def create_demo():
                 gr.Markdown("Built with [Ollama](https://ollama.ai/) | [LangChain](https://python.langchain.com/)")
 
         # Обрабатываем ввод сообщений
-        msg.submit(chatbot.chat, [msg, model_dropdown, chatbot_component], [msg, chatbot_component])
+        msg.submit(chatbot.chat_test, [msg, model_dropdown, chatbot_component], [msg, chatbot_component])
 
     return demo
 
