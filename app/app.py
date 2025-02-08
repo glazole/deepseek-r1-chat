@@ -76,7 +76,23 @@ class ChatBot:
 
         try:
             chain = chat_prompt | llm_engine | StrOutputParser()
-            response = chain.invoke({"input": user_input, "chat_history": self.chat_history}) or "⚠️ Ошибка: модель не вернула ответ."
+            
+            # Запускаем генерацию в отдельном потоке с контролем stop_flag
+            def generate():
+                return chain.invoke({"input": user_input, "chat_history": self.chat_history}) or "⚠️ Ошибка: модель не вернула ответ."
+
+            response = None
+            thread = threading.Thread(target=lambda: generate() if not stop_flag.is_set() else None)
+            thread.start()
+            thread.join(timeout=10)  # Даем 10 секунд на выполнение
+            
+            if thread.is_alive():  # Если поток еще работает
+                logging.warning("⏳ Запрос к модели затянулся, прерываем...")
+                stop_flag.set()
+                response = "⚠️ Остановлено пользователем (превышено время ожидания)"
+            else:
+                response = "⚠️ Ошибка: модель не вернула ответ." if response is None else response
+
         except Exception as e:
             logging.error(f"❌ Ошибка генерации: {e}")
             response = "⚠️ Ошибка обработки запроса."
@@ -89,7 +105,7 @@ class ChatBot:
     def chat(self, message, model_choice, history):
         """Обработка чата в Gradio"""
         if not message:
-            return "", history, history
+            return "", history
 
         logging.debug(f"📩 Входящее сообщение: {message}")
         logging.debug(f"🔄 Выбранная модель: {model_choice}")
@@ -104,12 +120,13 @@ class ChatBot:
         # Обновляем историю сообщений
         history.append((message, ai_response))
 
-        return "", history, history # Очищаем поле ввода
+        return "", history # Очищаем поле ввода
 
     def stop_generation(self):
         """Остановка генерации"""
         logging.warning("⛔ Остановка генерации пользователем")
         stop_flag.set()
+        return "⚠️ Генерация остановлена", []
 
     def clear_chat(self):
         """Очистка чата"""
@@ -131,7 +148,7 @@ def create_demo():
             with gr.Column(scale=4):
                 chatbot_component = gr.Chatbot(
                     value=[],
-                    show_copy_button=True
+                    show_copy_button=True,
                     height=500, 
                     type="messages")
                 
@@ -168,10 +185,10 @@ def create_demo():
         )
 
         # Остановка генерации
-        stop_btn.click(fn=chatbot.stop_generation, inputs=[], outputs=[])
+        stop_btn.click(fn=chatbot.stop_generation, inputs=[], outputs=[msg, chatbot_component])
 
         # Очистка чата
-        clear_btn.click(fn=chatbot.clear_chat, inputs=[], outputs=[chatbot_component])
+        clear_btn.click(fn=chatbot.clear_chat, inputs=[], outputs=[msg, chatbot_component])
 
     return demo
 
