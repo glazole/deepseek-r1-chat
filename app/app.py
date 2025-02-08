@@ -104,7 +104,7 @@ def create_demo():
         with gr.Row():
             with gr.Column(scale=4):
                 chatbot_component = gr.Chatbot(
-                    value=[{"": "Hi! I'm DeepSeek. How can I help you code today? 💻"}],
+                    value=[{"role": "ai", "content": "Hi! I'm DeepSeek. How can I help you code today? 💻"}],
                     show_copy_button=True,
                     height=500,
                     type="messages"  # Указываем правильный формат
