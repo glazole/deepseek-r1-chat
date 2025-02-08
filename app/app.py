@@ -50,15 +50,12 @@ chat_prompt = ChatPromptTemplate.from_messages([
 
 class ChatBot:
     def __init__(self):
-        self.message_log = [
+        self.chat_history = [
             {"role": "assistant", "content": "Hi! I'm DeepSeek. How can I help you code today? 💻"}
         ]
-        self.chat_history = []
 
     def generate_ai_response(self, user_input, llm_engine):
         """Генерация ответа от AI"""
-        self.chat_history.append(HumanMessage(content=user_input))
-        
         logging.info(f"📝 Отправка запроса: {user_input}")
 
         # Запрос к модели
@@ -70,34 +67,29 @@ class ChatBot:
 
         logging.info(f"💡 Ответ от модели: {response}")
 
-        self.chat_history.append(AIMessage(content=response))
-        return response
+        return response.strip()
 
     def chat(self, message, model_choice, history):
         """Обработка чата в Gradio"""
         if not message:
-            return "", history
-        
+            return history  # Возвращаем текущую историю
+
         logging.debug(f"📩 Входящее сообщение: {message}")
         logging.debug(f"🔄 Выбранная модель: {model_choice}")
 
         llm_engine = get_llm_engine(model_choice)
         logging.debug("✅ LLM-движок успешно инициализирован")
         
-        # Добавляем сообщение пользователя в лог
-        self.message_log.append({"role": "user", "content": message})
-        
+        # Добавляем сообщение пользователя в историю
+        history.append({"role": "user", "content": message})
+
         # Генерация ответа
         ai_response = self.generate_ai_response(message, llm_engine)
         
-        # Добавляем ответ AI в лог
-        self.message_log.append({"role": "assistant", "content": ai_response})
-        
-        # Обновляем историю сообщений в правильном формате
-        history.append({"role": "user", "content": message})
+        # Добавляем ответ AI в историю
         history.append({"role": "assistant", "content": ai_response})
-        
-        return "", history
+
+        return history  # Возвращаем обновленную историю
 
 def create_demo():
     chatbot = ChatBot()
@@ -113,7 +105,7 @@ def create_demo():
                         {"role": "assistant", "content": "Hi! I'm DeepSeek. How can I help you code today? 💻"}
                     ],
                     height=500,
-                    type="messages"  # Используем правильный формат!
+                    type="messages"  # Указываем правильный формат!
                 )
                 msg = gr.Textbox(
                     placeholder="Type your coding question here...",
@@ -140,8 +132,8 @@ def create_demo():
         msg.submit(
             fn=chatbot.chat,
             inputs=[msg, model_dropdown, chatbot_component],
-            outputs=[msg, chatbot_component]
-        )
+            outputs=[chatbot_component]  # Убираем msg, обновляем только чат
+        ).then(lambda: "", None, msg)  # Очищаем поле ввода после отправки
 
     return demo
 
