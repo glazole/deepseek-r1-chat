@@ -4,7 +4,6 @@ import logging
 from langchain_ollama import ChatOllama
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.prompts import (
-    SystemMessagePromptTemplate,
     MessagesPlaceholder,
     ChatPromptTemplate
 )
@@ -49,7 +48,7 @@ chat_prompt = ChatPromptTemplate.from_messages([
 class ChatBot:
     def __init__(self):
         self.chat_history = [
-            {"role": "assistant", "content": "## Hi! I'm DeepSeek.\n\nHow can I help you code today? 💻"}
+            "## Hi! I'm DeepSeek.\n\nHow can I help you code today? 💻"
         ]
 
     def generate_ai_response(self, user_input, llm_engine):
@@ -69,8 +68,8 @@ class ChatBot:
 
     def chat(self, message, model_choice, history):
         """Обработка чата в Gradio"""
-        if not message:
-            return history, ""  # Возвращаем историю без изменений
+        if isinstance(history, str):  # Если история передана как строка, превращаем в список
+            history = history.split("\n")
 
         logging.debug(f"📩 Входящее сообщение: {message}")
         logging.debug(f"🔄 Выбранная модель: {model_choice}")
@@ -87,7 +86,7 @@ class ChatBot:
         # Добавляем ответ AI в историю
         history.append(f"**DeepSeek:**\n\n{ai_response}")
 
-        return history, ""  # Возвращаем обновленную историю и очищаем поле ввода
+        return "\n".join(history), ""  # Преобразуем список в строку для Markdown
 
 def create_demo():
     chatbot = ChatBot()
