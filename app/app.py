@@ -77,17 +77,18 @@ class ChatBot:
 
     def chat(self, message, model_choice, history):
         if not message:
-            return history  # Возвращаем текущую историю, ничего не меняя
+            return "", history  # Очистка ввода + возврат истории
 
         llm_engine = get_llm_engine(model_choice)
 
         ai_response = self.generate_ai_response(message, llm_engine)
 
-        # Добавляем сообщения в историю в формате OpenAI-style
+        # Добавляем сообщения в OpenAI-style формате
         history.append({"role": "user", "content": message})
         history.append({"role": "ai", "content": ai_response})
 
-        return history  # Gradio теперь ожидает такой формат
+        return "", history  # Вернем два значения: пустое поле ввода + обновленную историю
+
 
 
 def create_demo():
