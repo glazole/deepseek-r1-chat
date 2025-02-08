@@ -121,18 +121,18 @@ def create_demo():
             with gr.Column(scale=4):
                 chatbot_component = gr.Chatbot(
                     value=[
-                        {"role": "assistant", "content": "Hi! I'm DeepSeek. How can I help you code today? 💻"}
+                        (None, "Hi! I'm DeepSeek. How can I help you code today? 💻")
                     ],
                     height=500,
-                    type="messages"  # Используем правильный формат для передачи текста
+                    # type="messages"  # Используем правильный формат для передачи текста
                 )
                 msg = gr.Textbox(
                     placeholder="Type your coding question here...",
                     show_label=False
                 )
                 with gr.Row():
-                    stop_btn = gr.Button("⛔ Остановить")
-                    clear_btn = gr.Button("🗑 Очистить чат")
+                    stop_btn = gr.Button("⛔ Stop")
+                    clear_btn = gr.Button("🗑 Clear")
                 
             with gr.Column(scale=1):
                 model_dropdown = gr.Dropdown(
