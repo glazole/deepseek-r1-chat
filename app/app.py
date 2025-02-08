@@ -126,7 +126,7 @@ def create_demo():
                 gr.Markdown("Built with [Ollama](https://ollama.ai/) | [LangChain](https://python.langchain.com/)")
 
         # Обрабатываем ввод сообщений
-        msg.submit(chatbot.chat_test, [msg, model_dropdown, chatbot_component], [msg, chatbot_component])
+        msg.submit(chatbot.chat, [msg, model_dropdown, chatbot_component], [msg, chatbot_component])
 
     return demo
 
