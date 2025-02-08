@@ -157,8 +157,7 @@ def create_demo():
                 )
                 
                 with gr.Row():
-                    stop_btn = gr.Button("⛔ Stop")
-                    clear_btn = gr.Button("🗑 Clear")
+                    clear_btn = gr.Button("🗑 Clear chat")
                 
             with gr.Column(scale=1):
                 model_dropdown = gr.Dropdown(
