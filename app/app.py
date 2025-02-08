@@ -122,7 +122,7 @@ def create_demo():
                 
             with gr.Column(scale=1):
                 model_dropdown = gr.Dropdown(
-                    choices=["deepseek-r1:1.5b", "deepseek-r1:3b"],
+                    choices=["deepseek-r1:1.5b", "deepseek-r1:7b"],
                     value="deepseek-r1:1.5b",
                     label="Choose Model"
                 )
