@@ -159,7 +159,7 @@ def create_demo():
         clear_btn.click(fn=chatbot.clear_chat, inputs=[], outputs=[chatbot_component])
 
     return demo
-upd
+
 if __name__ == "__main__":
     demo = create_demo()
     demo.launch(server_name="0.0.0.0", server_port=7860)
