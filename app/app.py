@@ -3,6 +3,7 @@ from langchain_ollama import ChatOllama
 import requests
 import torch
 import logging
+import json
 
 # Настройка логирования
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
@@ -37,10 +38,10 @@ def get_llm_engine(model_name):
 
     return ChatOllama(
         model=model_name,
-        base_url=OLLAMA_API,  # Исправлено
-        temperature=0.3
+        base_url=OLLAMA_API,  # Используем правильный URL Ollama
+        temperature=0.3,
+        stream=True  # Включаем поддержку потокового вывода
     )
-
 
 SYSTEM_TEMPLATE = """You are an expert AI coding assistant. Provide concise, correct solutions 
 with strategic logging.info statements for debugging. Always respond in English."""
@@ -53,7 +54,7 @@ chat_prompt = ChatPromptTemplate.from_messages([
 
 class ChatBot:
     def __init__(self):
-        self.message_log = [{"role": "ai", "content": "Hi! I'm DeepSeek. How can I help you code today? 💻"}]
+        self.message_log = [{"role": "assistant", "content": "Hi! I'm DeepSeek. How can I help you code today? 💻"}]
         self.chat_history = []
 
     def generate_ai_response(self, user_input, llm_engine):
@@ -64,10 +65,21 @@ class ChatBot:
                 "input": user_input,
                 "chat_history": self.chat_history
             })
-            self.chat_history.append(AIMessage(content=response))
-            return response
+
+            full_response = ""
+            for line in response.split("\n"):
+                try:
+                    json_data = json.loads(line)  # Парсим каждую строку как JSON
+                    if "message" in json_data and "content" in json_data["message"]:
+                        full_response += json_data["message"]["content"]
+                except json.JSONDecodeError:
+                    logging.warning(f"Не удалось разобрать JSON: {line}")
+
+            self.chat_history.append(AIMessage(content=full_response.strip()))
+            return full_response.strip()
+
         except Exception as e:
-            logging.error(f"Error generating AI response: {e}")  # Исправлено
+            logging.error(f"Error generating AI response: {e}")
             return "Sorry, I encountered an error while generating the response."
 
     def chat(self, message, model_choice, history):
