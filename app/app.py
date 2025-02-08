@@ -61,9 +61,7 @@ chat_prompt = ChatPromptTemplate.from_messages([
 ])
 class ChatBot:
     def __init__(self):
-        self.chat_history = [
-            {"role": "ai", "content": "Hi! I'm DeepSeek. How can I help you code today? 💻"}
-        ]
+        self.chat_history = []
 
     def generate_ai_response(self, user_input, llm_engine):
         logging.info(f"📝 Отправка запроса в модель: {user_input}")
@@ -80,7 +78,7 @@ class ChatBot:
     def chat(self, message, model_choice, history):
         """Обработка чата в Gradio"""
         if not message:
-            return history, ""  # Если пустое сообщение, ничего не делаем
+            return "", history
 
         # Инициализация LLM-движка
         llm_engine = get_llm_engine(model_choice)
@@ -94,16 +92,7 @@ class ChatBot:
         # Обновляем историю сообщений
         history.append({"role": "ai", "content": ai_response})
 
-        return history, ""  # Чат обновляется первым, поле ввода очищается вторым
-
-    def clear_chat(self):
-        """Очистка чата"""
-        logging.info("🗑 Очистка истории чата")
-        self.chat_history = [
-            {"role": "ai", "content": "Hi! I'm DeepSeek. How can I help you code today? 💻"}
-        ]
-        return "", self.chat_history
-
+        return "", history
 
 def create_demo():
     chatbot = ChatBot()
@@ -115,7 +104,7 @@ def create_demo():
         with gr.Row():
             with gr.Column(scale=4):
                 chatbot_component = gr.Chatbot(
-                    value=[{"role": "ai", "content": "Hi! I'm DeepSeek. How can I help you code today? 💻"}],
+                    value=[(None, "Hi! I'm DeepSeek. How can I help you code today? 💻")],
                     show_copy_button=True,
                     height=500,
                     type="messages"  # Указываем правильный формат
@@ -125,10 +114,6 @@ def create_demo():
                     placeholder="Type your coding question here...",
                     show_label=False
                 )
-                
-                with gr.Row():
-                    send_btn = gr.Button("📩 Send message")  # Кнопка отправки
-                    clear_btn = gr.Button("🗑 Clear chat")
                 
             with gr.Column(scale=1):
                 model_dropdown = gr.Dropdown(
@@ -144,25 +129,14 @@ def create_demo():
                 - 💡 Solution Design
                 """)
 
-
-                
                 gr.Markdown("Built with [Ollama](https://ollama.ai/) | [LangChain](https://python.langchain.com/)")
 
         # Обрабатываем ввод сообщений
         msg.submit(
             fn=chatbot.chat,
             inputs=[msg, model_dropdown, chatbot_component],
-            outputs=[msg, chatbot_component]  # Чат первым, поле ввода вторым!
-        )
-
-        send_btn.click(
-            fn=chatbot.chat,
-            inputs=[msg, model_dropdown, chatbot_component],
-            outputs=[msg, chatbot_component]  # Чат первым, поле ввода вторым!
-        )
-
-        # Очистка чата
-        clear_btn.click(fn=chatbot.clear_chat, inputs=[], outputs=[msg, chatbot_component], queue=False)
+            outputs=[msg, chatbot_component]
+            )
 
     return demo
 
