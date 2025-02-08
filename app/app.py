@@ -50,7 +50,9 @@ chat_prompt = ChatPromptTemplate.from_messages([
 
 class ChatBot:
     def __init__(self):
-        self.message_log = [{"role": "ai", "content": "Hi! I'm DeepSeek. How can I help you code today? 💻"}]
+        self.message_log = [
+            {"role": "assistant", "content": "Hi! I'm DeepSeek. How can I help you code today? 💻"}
+        ]
         self.chat_history = []
 
     def generate_ai_response(self, user_input, llm_engine):
@@ -89,10 +91,12 @@ class ChatBot:
         ai_response = self.generate_ai_response(message, llm_engine)
         
         # Добавляем ответ AI в лог
-        self.message_log.append({"role": "ai", "content": ai_response})
+        self.message_log.append({"role": "assistant", "content": ai_response})
         
-        # Обновляем историю сообщений (важно: корректный формат)
-        history.append((message, ai_response))
+        # Обновляем историю сообщений в правильном формате
+        history.append({"role": "user", "content": message})
+        history.append({"role": "assistant", "content": ai_response})
+        
         return "", history
 
 def create_demo():
@@ -105,9 +109,11 @@ def create_demo():
         with gr.Row():
             with gr.Column(scale=4):
                 chatbot_component = gr.Chatbot(
-                    value=[("Hello!", "Hi! I'm DeepSeek. How can I help you code today? 💻")],
+                    value=[
+                        {"role": "assistant", "content": "Hi! I'm DeepSeek. How can I help you code today? 💻"}
+                    ],
                     height=500,
-                    type="messages"  # Добавлено для совместимости с Gradio 4.x+
+                    type="messages"  # Используем правильный формат!
                 )
                 msg = gr.Textbox(
                     placeholder="Type your coding question here...",
@@ -116,7 +122,7 @@ def create_demo():
                 
             with gr.Column(scale=1):
                 model_dropdown = gr.Dropdown(
-                    choices=["deepseek-r1:1.5b", "deepseek-r1:7b"],
+                    choices=["deepseek-r1:1.5b", "deepseek-r1:3b"],
                     value="deepseek-r1:1.5b",
                     label="Choose Model"
                 )
