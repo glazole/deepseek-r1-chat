@@ -140,8 +140,6 @@ def create_demo():
                     value="deepseek-r1:1.5b",
                     label="Choose Model"
                 )
-                temperature_slider = gr.Slider(minimum=0.1, maximum=0.5, step=0.1, value=0.3, label="Temperature")
-
                 gr.Markdown("### Model Capabilities")
                 gr.Markdown("""
                 - 🐍 Python Expert
@@ -154,14 +152,14 @@ def create_demo():
 
         msg.submit(
             fn=chatbot.chat,
-            inputs=[msg, model_dropdown, temperature_slider, chatbot_component],
+            inputs=[msg, model_dropdown, chatbot_component],
             outputs=[chatbot_component, msg]  # Очищаем поле ввода после отправки
         )
         stop_btn.click(fn=chatbot.stop_generation, inputs=[], outputs=[])
         clear_btn.click(fn=chatbot.clear_chat, inputs=[], outputs=[chatbot_component])
 
     return demo
-
+upd
 if __name__ == "__main__":
     demo = create_demo()
     demo.launch(server_name="0.0.0.0", server_port=7860)
