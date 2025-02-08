@@ -19,8 +19,6 @@ services:
       - OLLAMA_HOST=0.0.0.0:11434
     volumes:
       - ./models:/root/.ollama/models
-    # ports:
-    #   - "11434:11434"
     restart: unless-stopped
     entrypoint: ["/bin/sh", "-c"]
     command:
