@@ -15,7 +15,8 @@ services:
     environment:
       - NVIDIA_VISIBLE_DEVICES=all
       - NVIDIA_DRIVER_CAPABILITIES=compute,utility
-      - OLLAMA_BACKEND=cuda  # Принудительно используем GPU
+      - OLLAMA_BACKEND=cuda
+      - OLLAMA_HOST=0.0.0.0:11434
     volumes:
       - ./models:/root/.ollama/models
     ports:
