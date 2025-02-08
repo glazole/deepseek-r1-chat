@@ -67,42 +67,17 @@ class ChatBot:
         self.chat_history = [{"role": "ai", "content": "Hi! I'm DeepSeek. How can I help you code today? 💻"}]
 
     def generate_ai_response(self, user_input, llm_engine):
-        stop_flag.clear()  # Сбрасываем флаг перед генерацией
-
-        if stop_flag.is_set():
-            logging.warning("⛔ Генерация остановлена пользователем")
-            return "⚠️ Остановлено пользователем"
-
+        
         logging.info(f"📝 Отправка запроса: {user_input}")
         self.chat_history.append(HumanMessage(content=user_input))
 
-        response = "⚠️ Ошибка: модель не вернула ответ."  # Значение по умолчанию
-
-        def generate():
-            nonlocal response
-            if stop_flag.is_set():
-                return
-            try:
-                response = chat_prompt | llm_engine | StrOutputParser()
-                response = response.invoke({"input": user_input, "chat_history": self.chat_history}) or "⚠️ Ошибка: модель не вернула ответ."
-            except Exception as e:
-                logging.error(f"❌ Ошибка генерации: {e}")
-                response = "⚠️ Ошибка обработки запроса."
-
-        thread = threading.Thread(target=generate)
-        thread.start()
-        thread.join(timeout=10)  # Ожидание завершения
-
-        if thread.is_alive():  # Если поток еще работает
-            logging.warning("⏳ Запрос к модели затянулся, прерываем...")
-            stop_flag.set()
-            response = "⚠️ Остановлено пользователем (превышено время ожидания)"
-
+        chain= chat_prompt | llm_engine | StrOutputParser()
+        response = chain.invoke({"input": user_input, "chat_history": self.chat_history}) or "⚠️ Ошибка: модель не вернула ответ."
+           
         self.chat_history.append(AIMessage(content=response))
         logging.info(f"💡 Полный ответ от модели: {response}")
 
         return response
-
 
     def chat(self, message, model_choice, history):
         """Обработка чата в Gradio"""
@@ -147,7 +122,7 @@ def create_demo():
                 chatbot_component = gr.Chatbot(
                     value=[],
                     show_copy_button=True,
-                    sanitize_html=True,
+                    sanitize_html=False,
                     height=500, 
                     type="messages")
                 
@@ -183,7 +158,7 @@ def create_demo():
         )
 
         # Очистка чата
-        clear_btn.click(fn=chatbot.clear_chat, inputs=[], outputs=[msg, chatbot_component])
+        clear_btn.click(fn=chatbot.clear_chat, inputs=[], outputs=[msg, chatbot_component], queue=False)
 
     return demo
 
