@@ -86,7 +86,8 @@ class ChatBot:
         # Добавляем ответ AI в историю
         history.append(f"**DeepSeek:**\n\n{ai_response}")
 
-        return "\n".join(history), ""  # Преобразуем список в строку для Markdown
+        # Принудительное обновление UI
+        return gr.update(value="\n".join(history)), ""
 
 def create_demo():
     chatbot = ChatBot()
