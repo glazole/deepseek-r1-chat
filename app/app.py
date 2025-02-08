@@ -94,7 +94,7 @@ class ChatBot:
         # Обновляем историю сообщений
         history.append({"role": "ai", "content": ai_response})
 
-        return history, ""  # Чат обновляется первым, поле ввода очищается вторым
+        return "", history  # Чат обновляется первым, поле ввода очищается вторым
 
     def clear_chat(self):
         """Очистка чата"""
@@ -102,7 +102,7 @@ class ChatBot:
         self.chat_history = [
             (None, "Hi! I'm DeepSeek. How can I help you code today? 💻")
         ]
-        return self.chat_history, ""
+        return "", self.chat_history
 
 
 def create_demo():
@@ -118,7 +118,7 @@ def create_demo():
                     value=[(None, "Hi! I'm DeepSeek. How can I help you code today? 💻")],
                     show_copy_button=True,
                     height=500,
-                    # type="messages"  # Указываем правильный формат
+                    type="messages"  # Указываем правильный формат
                 )
                 
                 msg = gr.Textbox(
