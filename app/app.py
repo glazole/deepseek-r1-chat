@@ -100,9 +100,9 @@ class ChatBot:
         """Очистка чата"""
         logging.info("🗑 Очистка истории чата")
         self.chat_history = [
-            {"role": "ai", "content": "Hi! I'm DeepSeek. How can I help you code today? 💻"}
+            (None, "Hi! I'm DeepSeek. How can I help you code today? 💻")
         ]
-        return "", self.chat_history
+        return self.chat_history, ""
 
 
 def create_demo():
@@ -115,10 +115,10 @@ def create_demo():
         with gr.Row():
             with gr.Column(scale=4):
                 chatbot_component = gr.Chatbot(
-                    value=[{"role": "ai", "content": "Hi! I'm DeepSeek. How can I help you code today? 💻"}],
+                    value=[(None, "Hi! I'm DeepSeek. How can I help you code today? 💻")],
                     show_copy_button=True,
                     height=500,
-                    type="messages"  # Указываем правильный формат
+                    # type="messages"  # Указываем правильный формат
                 )
                 
                 msg = gr.Textbox(
@@ -143,6 +143,8 @@ def create_demo():
                 - 📝 Code Documentation
                 - 💡 Solution Design
                 """)
+
+
                 
                 gr.Markdown("Built with [Ollama](https://ollama.ai/) | [LangChain](https://python.langchain.com/)")
 
@@ -150,13 +152,13 @@ def create_demo():
         msg.submit(
             fn=chatbot.chat,
             inputs=[msg, model_dropdown, chatbot_component],
-            outputs=[chatbot_component, msg]  # Чат первым, поле ввода вторым!
+            outputs=[msg, chatbot_component]  # Чат первым, поле ввода вторым!
         )
 
         send_btn.click(
             fn=chatbot.chat,
             inputs=[msg, model_dropdown, chatbot_component],
-            outputs=[chatbot_component, msg]  # Чат первым, поле ввода вторым!
+            outputs=[msg, chatbot_component]  # Чат первым, поле ввода вторым!
         )
 
         # Очистка чата
