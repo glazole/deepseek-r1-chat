@@ -57,7 +57,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.gradio
-    container_name: gradio_app
+    container_name: gradio
     depends_on:
       - ollama
     ports:
