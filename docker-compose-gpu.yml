@@ -5,9 +5,17 @@ services:
       dockerfile: Dockerfile.ollama
     container_name: ollama
     runtime: nvidia
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
     environment:
       - NVIDIA_VISIBLE_DEVICES=all
       - NVIDIA_DRIVER_CAPABILITIES=compute,utility
+      - OLLAMA_BACKEND=cuda
     volumes:
       - ./models:/root/.ollama/models
     ports:
@@ -16,7 +24,7 @@ services:
       /bin/sh -c "
       ollama list | grep -q 'deepseek-r1:1.5b' || ollama pull deepseek-r1:1.5b &&
       ollama list | grep -q 'deepseek-r1:7b' || ollama pull deepseek-r1:7b &&
-      ollama serve
+      OLLAMA_BACKEND=cuda ollama serve
       "
 
   gradio:
