@@ -1,6 +1,7 @@
 import gradio as gr
 import requests
 import logging
+import threading
 from langchain_ollama import ChatOllama
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.prompts import (
@@ -17,6 +18,9 @@ logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(
 
 # URL Ollama API
 OLLAMA_API = "http://ollama:11434"
+
+# Флаг остановки генерации
+stop_flag = threading.Event()
 
 # Проверка подключения к Ollama перед запуском
 def test_ollama_connection():
@@ -35,7 +39,7 @@ def get_llm_engine(model_name):
     return ChatOllama(
         model=model_name,
         base_url=OLLAMA_API,
-        temperature=0.3
+        temperature=temperature
     )
 
 # Настройки системного промпта
@@ -58,6 +62,8 @@ class ChatBot:
         """Генерация ответа от AI (без удаления тегов)"""
         logging.info(f"📝 Отправка запроса: {user_input}")
 
+        stop_flag.clear()
+
         # Запрос к модели
         chain = chat_prompt | llm_engine | StrOutputParser()
         response = chain.invoke({
@@ -66,6 +72,8 @@ class ChatBot:
         })
 
         logging.info(f"💡 Полный ответ от модели: {response}")
+        if stop_flag.is_set():
+            return "⛔ Генерация остановлена."
 
         return response  # Оставляем ответ без изменений (с `<think>` и прочим)
 
@@ -90,6 +98,15 @@ class ChatBot:
         history.append({"role": "assistant", "content": ai_response})
 
         return history, ""  # Возвращаем обновленную историю и очищаем поле ввода
+    
+    def stop_generation(self):
+        """Остановка генерации"""
+        stop_flag.set()
+
+    def clear_chat(self):
+        """Очистка чата"""
+        self.chat_history = []
+        return []
 
 def create_demo():
     chatbot = ChatBot()
@@ -111,6 +128,9 @@ def create_demo():
                     placeholder="Type your coding question here...",
                     show_label=False
                 )
+                with gr.Row():
+                    stop_btn = gr.Button("⛔ Остановить")
+                    clear_btn = gr.Button("🗑 Очистить чат")
                 
             with gr.Column(scale=1):
                 model_dropdown = gr.Dropdown(
@@ -118,7 +138,8 @@ def create_demo():
                     value="deepseek-r1:1.5b",
                     label="Choose Model"
                 )
-                
+                temperature_slider = gr.Slider(minimum=0.1, maximum=0.5, step=0.1, value=0.3, label="Temperature")
+
                 gr.Markdown("### Model Capabilities")
                 gr.Markdown("""
                 - 🐍 Python Expert
@@ -131,9 +152,11 @@ def create_demo():
 
         msg.submit(
             fn=chatbot.chat,
-            inputs=[msg, model_dropdown, chatbot_component],
+            inputs=[msg, model_dropdown, temperature_slider, chatbot_component],
             outputs=[chatbot_component, msg]  # Очищаем поле ввода после отправки
         )
+        stop_btn.click(fn=chatbot.stop_generation, inputs=[], outputs=[])
+        clear_btn.click(fn=chatbot.clear_chat, inputs=[], outputs=[chatbot_component])
 
     return demo
 
