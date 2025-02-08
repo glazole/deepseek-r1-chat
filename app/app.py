@@ -126,12 +126,14 @@ def create_demo():
     with gr.Blocks(theme=gr.themes.Soft(primary_hue="blue", neutral_hue="zinc")) as demo:
         gr.Markdown("# 🧠 DeepSeek Code Companion")
         gr.Markdown("🚀 Your AI Pair Programmer with Debugging Superpowers")
-        
-        history_state = gr.State([])  # Храним историю сообщений
-        
+            
         with gr.Row():
             with gr.Column(scale=4):
-                chatbot_component = gr.Chatbot(value=[], height=500, type="messages")
+                chatbot_component = gr.Chatbot(
+                    value=[],
+                    show_copy_button=True
+                    height=500, 
+                    type="messages")
                 
                 msg = gr.Textbox(
                     placeholder="Type your coding question here...",
@@ -161,7 +163,7 @@ def create_demo():
         # Обрабатываем ввод сообщений
         msg.submit(
             fn=chatbot.chat,
-            inputs=[msg, model_dropdown, history_state],
+            inputs=[msg, model_dropdown, chatbot_component],
             outputs=[msg, chatbot_component]
         )
 
