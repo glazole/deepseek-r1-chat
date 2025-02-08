@@ -80,7 +80,7 @@ class ChatBot:
     def chat(self, message, model_choice, history):
         """Обработка чата в Gradio"""
         if not message:
-            return "", history  # Если пустое сообщение, ничего не делаем
+            return history, ""  # Если пустое сообщение, ничего не делаем
 
         # Инициализация LLM-движка
         llm_engine = get_llm_engine(model_choice)
@@ -94,7 +94,7 @@ class ChatBot:
         # Обновляем историю сообщений
         history.append({"role": "ai", "content": ai_response})
 
-        return "", history  # Чат обновляется первым, поле ввода очищается вторым
+        return history, ""  # Чат обновляется первым, поле ввода очищается вторым
 
     def clear_chat(self):
         """Очистка чата"""
