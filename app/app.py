@@ -87,7 +87,7 @@ class ChatBot:
         history.append({"role": "user", "content": message})
         history.append({"role": "ai", "content": ai_response})
 
-        return "", history  # Вернем два значения: пустое поле ввода + обновленную историю
+        return history, "" # Вернем два значения: пустое поле ввода + обновленную историю
 
 
 
