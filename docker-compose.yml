@@ -16,7 +16,7 @@ services:
       - NVIDIA_VISIBLE_DEVICES=all
       - NVIDIA_DRIVER_CAPABILITIES=compute,utility
       - OLLAMA_BACKEND=cuda
-      # - OLLAMA_HOST=0.0.0.0:11434
+      - OLLAMA_HOST=0.0.0.0:11434
     volumes:
       - ./models:/root/.ollama/models
     # ports:
@@ -71,7 +71,7 @@ services:
     command:
       - |
         echo "⏳ Ожидание Ollama..."
-        until curl -s http://localhost:11434/api/tags > /dev/null; do
+        until curl -s http://ollama:11434/api/tags > /dev/null; do
           echo "⚠️  Ollama еще не готов, ждем..."
           sleep 2
         done
