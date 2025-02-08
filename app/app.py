@@ -89,7 +89,7 @@ class ChatBot:
     def chat(self, message, model_choice, history):
         """Обработка чата в Gradio"""
         if not message:
-            return "", history
+            return "", history, history
 
         logging.debug(f"📩 Входящее сообщение: {message}")
         logging.debug(f"🔄 Выбранная модель: {model_choice}")
@@ -104,7 +104,7 @@ class ChatBot:
         # Обновляем историю сообщений
         history.append((message, ai_response))
 
-        return "", history  # Очищаем поле ввода
+        return "", history, history # Очищаем поле ввода
 
     def stop_generation(self):
         """Остановка генерации"""
@@ -162,7 +162,7 @@ def create_demo():
         msg.submit(
             fn=chatbot.chat,
             inputs=[msg, model_dropdown, history_state],
-            outputs=[msg, chatbot_component, history_state]  # Добавляем history_state
+            outputs=[msg, chatbot_component]
         )
 
         # Остановка генерации
