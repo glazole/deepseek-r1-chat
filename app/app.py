@@ -54,26 +54,25 @@ chat_prompt = ChatPromptTemplate.from_messages([
 
 class ChatBot:
     def __init__(self):
-        self.chat_history = [
+        self.message_log = [
             {"role": "assistant", "content": "Hi! I'm DeepSeek. How can I help you code today? 💻"}
         ]
+        self.chat_history = []
 
     def generate_ai_response(self, user_input, llm_engine):
         """Генерация ответа от AI (без удаления тегов)"""
         logging.info(f"📝 Отправка запроса: {user_input}")
-
+        self.chat_history.append(HumanMessage(content=user_input))
         stop_flag.clear()
 
         # Запрос к модели
         chain = chat_prompt | llm_engine | StrOutputParser()
-        try:
-            for chunk in chain.stream({"input": user_input, "chat_history": self.chat_history}):
-                if stop_flag.is_set():
-                    return "⛔ Генерация остановлена."
-                response += chunk
-        except Exception as e:
-            logging.error(f"Ошибка генерации: {e}")
-            response = "⚠ Ошибка при генерации ответа."
+        response = chain.invoke({
+            "input": user_input, 
+            "chat_history": self.chat_history
+        })
+
+        self.chat_history.append(AIMessage(content=response))
 
         logging.info(f"💡 Полный ответ от модели: {response}")
 
@@ -82,24 +81,25 @@ class ChatBot:
     def chat(self, message, model_choice, history):
         """Обработка чата в Gradio"""
         if not message:
-            return history, ""  # Возвращаем историю без изменений
+            return "", history
 
         logging.debug(f"📩 Входящее сообщение: {message}")
         logging.debug(f"🔄 Выбранная модель: {model_choice}")
 
         llm_engine = get_llm_engine(model_choice)
         logging.debug("✅ LLM-движок успешно инициализирован")
-        
-        # Добавляем сообщение пользователя в историю
-        history.append({"role": "user", "content": message})
 
+        self.message_log.append({"role": "user", "content": message})
+        
         # Генерация ответа
         ai_response = self.generate_ai_response(message, llm_engine)
         
         # Добавляем ответ AI в историю (сохраняем полный текст)
-        history.append({"role": "assistant", "content": ai_response})
+        self.message_log.append({"role": "assistant", "content": ai_response})
 
-        return history, ""  # Возвращаем обновленную историю и очищаем поле ввода
+        history.append((message, ai_response))
+
+        return "", history
     
     def stop_generation(self):
         """Остановка генерации"""
@@ -153,7 +153,7 @@ def create_demo():
         msg.submit(
             fn=chatbot.chat,
             inputs=[msg, model_dropdown, chatbot_component],
-            outputs=[chatbot_component, msg]  # Очищаем поле ввода после отправки
+            outputs=[msg, chatbot_component]  # Очищаем поле ввода после отправки
         )
         stop_btn.click(fn=chatbot.stop_generation, inputs=[], outputs=[])
         clear_btn.click(fn=chatbot.clear_chat, inputs=[], outputs=[chatbot_component])
