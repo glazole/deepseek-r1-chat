@@ -55,31 +55,32 @@ class ChatBot:
         self.chat_history = [
             # {"role": "assistant", "content": "Hi! I'm **DeepSeek**. How can I help you code today? 💻"}
         ]
-
+    # Генерация ответа модели на основе введенного пользователем сообщения
     def generate_ai_response(self, user_input, llm_engine):
         logging.info(f"📝 Отправка запроса в модель: {user_input}")
+        # Преобразуем историю в список строк, чтобы LangChain не ломался
+        formatted_history = [
+            message.content if isinstance(message, (HumanMessage, AIMessage)) else message
+            for message in self.chat_history
+        ]
         self.chat_history.append(HumanMessage(content=user_input))
         chain = chat_prompt | llm_engine | StrOutputParser()
-        response = chain.invoke({"input": user_input, "chat_history": self.chat_history}) or "⚠️ Ошибка: модель не вернула ответ."
+        response = chain.invoke({"input": user_input, "chat_history": formatted_history}) or "⚠️ Ошибка: модель не вернула ответ."
         self.chat_history.append(AIMessage(content=response))
         logging.info(f"💡 Полный ответ от модели: {response}")
         return response
-
+    # Отработка чата в интерфейсе Gradio
     def chat(self, message, model_choice, history):
         if not message:
             return "", history
-
         llm_engine = get_llm_engine(model_choice)
         ai_response = self.generate_ai_response(message, llm_engine)
-
         # Добавляем сообщения в историю
         history.append({"role": "user", "content": message})
-        history.append({"role": "assistant", "content": ai_response})  # OpenAI-style требует "assistant"
-
+        history.append({"role": "assistant", "content": ai_response})
         logging.info(f"📜 Обновленная история чата: {history}")
-
-        return "", history  # Gradio теперь сам очищает ввод
-    
+        return "", history
+    # Для тестирование чата
     def chat_test(self, message, model_choice, history):
         history.append({"role": "user", "content": message})
         history.append({"role": "assistant", "content": "This is a test response."})
