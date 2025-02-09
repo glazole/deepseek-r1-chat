@@ -1,5 +1,5 @@
-gradio
-langchain
-langchain_ollama
-langchain_core
-requests
+gradio==5.15.0
+langchain==0.3.18
+langchain-core==0.3.34
+langchain-ollama==0.2.3
+requests==2.32.3

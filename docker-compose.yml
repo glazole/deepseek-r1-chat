@@ -17,6 +17,8 @@ services:
       - NVIDIA_DRIVER_CAPABILITIES=compute,utility
       - OLLAMA_BACKEND=cuda
       - OLLAMA_HOST=0.0.0.0:11434
+    ports:
+      - "11434:11434"
     volumes:
       - ./models:/root/.ollama/models
     restart: unless-stopped
@@ -50,7 +52,6 @@ services:
     networks:
       - Ollama_DS
 
-
   gradio:
     build:
       context: .
@@ -80,4 +81,3 @@ services:
 networks:
   Ollama_DS:
     driver: bridge
-
