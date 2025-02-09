@@ -1,22 +1,19 @@
 # Используем базовый образ Python 3.10
 FROM python:3.10
 
-# Устанавливаем PyTorch с поддержкой CUDA
-# RUN pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu124
-
+# Устанавливаем curl без лишних зависимостей
 RUN apt-get update && apt-get install -y \
 --no-install-recommends curl && \
 rm -rf /var/lib/apt/lists/*
 
-
 # Создаём рабочую директорию
 WORKDIR /app
 
-# Копируем зависимости
+# Копируем зависимости из файла и устанавливаем их
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Копируем весь код
+# Копируем код в рабочую директорию
 COPY . /app
 
 # Запускаем Gradio

@@ -2,6 +2,7 @@ import gradio as gr
 import requests
 import logging
 import time
+import re
 from langchain_ollama import ChatOllama
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
@@ -55,6 +56,9 @@ class ChatBot:
         self.chat_history = [
             # {"role": "assistant", "content": "Hi! I'm **DeepSeek**. How can I help you code today? 💻"}
         ]
+    def clean_response(self, response):
+        response = re.sub(r"<think>.*?</think>", "", response, flags=re.DOTALL).strip()
+        return response
     # Генерация ответа модели на основе введенного пользователем сообщения
     def generate_ai_response(self, user_input, llm_engine):
         logging.info(f"📝 Отправка запроса в модель: {user_input}")
@@ -66,6 +70,7 @@ class ChatBot:
         self.chat_history.append(HumanMessage(content=user_input))
         chain = chat_prompt | llm_engine | StrOutputParser()
         response = chain.invoke({"input": user_input, "chat_history": formatted_history}) or "⚠️ Ошибка: модель не вернула ответ."
+        response = self.clean_response(response)  # Очищаем от <think>...</think>
         self.chat_history.append(AIMessage(content=response))
         logging.info(f"💡 Полный ответ от модели: {response}")
         return response

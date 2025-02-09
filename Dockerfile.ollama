@@ -17,5 +17,5 @@ WORKDIR /root
 # Открываем порт для API
 EXPOSE 11434
 
-# Команда запуска
+# Запускаем Ollama
 CMD ["ollama", "serve"]
