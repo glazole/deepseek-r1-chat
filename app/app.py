@@ -57,7 +57,7 @@ def test_ollama_connection(retries=3, delay=3):
 if not test_ollama_connection():
     exit(1) 
 
-def get_llm_engine(model_name, temperature, top_p, top_k, repetition_penalty):
+def get_llm_engine(model_name, temperature, top_p, top_k, repeat_penalty):
     """
     Инициализирует LLM-модель с заданными параметрами.
 
@@ -66,7 +66,7 @@ def get_llm_engine(model_name, temperature, top_p, top_k, repetition_penalty):
         temperature (float): Температура генерации.
         top_p (float): Ограничение по вероятностному порогу (Nucleus Sampling).
         top_k (int): Количество возможных токенов (Top-K Sampling).
-        repetition_penalty (float): Штраф за повторяющиеся слова.
+        repeat_penalty (float): Штраф за повторяющиеся слова.
 
     Возвращает:
         ChatOllama: Объект модели, если инициализация успешна.
@@ -79,7 +79,7 @@ def get_llm_engine(model_name, temperature, top_p, top_k, repetition_penalty):
             temperature=temperature,
             top_p=top_p,
             top_k=top_k,
-            repetition_penalty=repetition_penalty,  # Новый параметр
+            repeat_penalty=repeat_penalty,
         )
     except Exception as e:
         logging.error(f"❌ Ошибка инициализации модели {model_name}: {e}")
@@ -154,7 +154,7 @@ class ChatBot:
         return thoughts, main_response  # Возвращаем размышления и основной ответ
 
     # Чат в Gradio
-    def chat(self, message, model_choice, temperature, top_p, top_k, repetition_penalty, history):
+    def chat(self, message, model_choice, temperature, top_p, top_k, repeat_penalty, history):
         """
         Обрабатывает сообщение пользователя, отправляет его в LLM-модель и обновляет историю чата.
 
@@ -164,7 +164,7 @@ class ChatBot:
             temperature (float): Температура генерации ответа.
             top_p (float): Вероятностное ограничение (nucleus sampling).
             top_k (int): Количество возможных вариантов токенов.
-            repetition_penalty (float): Штраф за повторение слов.
+            repeat_penalty (float): Штраф за повторение слов.
             history (list): История чата.
 
         Возвращает:
@@ -174,7 +174,7 @@ class ChatBot:
             return "", history
 
         # Получаем LLM с выбранными параметрами
-        llm_engine = get_llm_engine(model_choice, temperature, top_p, top_k, repetition_penalty)
+        llm_engine = get_llm_engine(model_choice, temperature, top_p, top_k, repeat_penalty)
 
         history.append({"role": "user", "content": message})
 
@@ -250,13 +250,13 @@ def create_demo():
                     label="Choose Model"  # Название поля выбора
                 )
 
-                # Новый выпадающий список для выбора температуры
+                # Выпадающий список для выбора температуры
                 temperature_dropdown = gr.Dropdown(
                     choices=[round(x, 1) for x in np.arange(0.1, 1.0, 0.1)],  # Генерируем шаги 0.1-0.7
                     value=0.3,  # Значение по умолчанию
                     label="Temperature",
                 )
-                # Новый слайдер для выбора top_p (Nucleus Sampling)
+                # Слайдер для выбора top_p (Nucleus Sampling)
                 top_p_slider = gr.Slider(
                     minimum=0.1,
                     maximum=1.0,
@@ -265,7 +265,7 @@ def create_demo():
                     label="Top-P Sampling"
                 )
 
-                # Новый слайдер для выбора top_k (Top-K Sampling)
+                # Слайдер для выбора top_k (Top-K Sampling)
                 top_k_slider = gr.Slider(
                     minimum=1,
                     maximum=100,
@@ -274,8 +274,8 @@ def create_demo():
                     label="Top-K Sampling"
                 )
 
-                # Новый слайдер для выбора repetition_penalty
-                repetition_penalty_slider = gr.Slider(
+                # Слайдер для выбора repeat_penalty
+                repeat_penalty_slider = gr.Slider(
                     minimum=1.0,
                     maximum=2.0,
                     step=0.1,
@@ -296,7 +296,7 @@ def create_demo():
                 gr.Markdown("Built with [Ollama](https://ollama.ai/) | [LangChain](https://python.langchain.com/)")
 
         # Привязываем отправку сообщения к функции chat() у ChatBot
-        msg.submit(chatbot.chat, [msg, model_dropdown, temperature_dropdown, top_p_slider, top_k_slider, repetition_penalty_slider, chatbot_component], [msg, chatbot_component])
+        msg.submit(chatbot.chat, [msg, model_dropdown, temperature_dropdown, top_p_slider, top_k_slider, repeat_penalty_slider, chatbot_component], [msg, chatbot_component])
 
     return demo  # Возвращаем объект интерфейса
 
